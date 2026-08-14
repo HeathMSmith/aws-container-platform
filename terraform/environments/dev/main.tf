@@ -10,3 +10,12 @@ resource "aws_ecr_repository" "app" {
     encryption_type = "AES256"
   }
 }
+
+resource "aws_ecs_cluster" "app" {
+  name = "aws-container-platform-${var.environment}"
+}
+
+resource "aws_cloudwatch_log_group" "app" {
+  name              = "/ecs/aws-container-platform-${var.environment}"
+  retention_in_days = 7
+}
