@@ -30,6 +30,26 @@ resource "aws_subnet" "public_b" {
   }
 }
 
+resource "aws_subnet" "private_a" {
+  vpc_id            = aws_vpc.app.id
+  cidr_block        = "10.20.11.0/24"
+  availability_zone = "${var.aws_region}a"
+
+  tags = {
+    Name = "aws-container-platform-${var.environment}-private-a"
+  }
+}
+
+resource "aws_subnet" "private_b" {
+  vpc_id            = aws_vpc.app.id
+  cidr_block        = "10.20.12.0/24"
+  availability_zone = "${var.aws_region}b"
+
+  tags = {
+    Name = "aws-container-platform-${var.environment}-private-b"
+  }
+}
+
 resource "aws_internet_gateway" "app" {
   vpc_id = aws_vpc.app.id
 
@@ -59,6 +79,24 @@ resource "aws_route_table_association" "public_a" {
 resource "aws_route_table_association" "public_b" {
   subnet_id      = aws_subnet.public_b.id
   route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.app.id
+
+  tags = {
+    Name = "aws-container-platform-${var.environment}-private"
+  }
+}
+
+resource "aws_route_table_association" "private_a" {
+  subnet_id      = aws_subnet.private_a.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "private_b" {
+  subnet_id      = aws_subnet.private_b.id
+  route_table_id = aws_route_table.private.id
 }
 
 resource "aws_security_group" "alb" {
@@ -110,5 +148,31 @@ resource "aws_security_group" "ecs_tasks" {
 
   tags = {
     Name = "aws-container-platform-${var.environment}-ecs-tasks"
+  }
+}
+
+resource "aws_security_group" "vpc_endpoints" {
+  name        = "aws-container-platform-${var.environment}-vpc-endpoints"
+  description = "Allow ECS tasks to access interface VPC endpoints."
+  vpc_id      = aws_vpc.app.id
+
+  ingress {
+    description     = "HTTPS from ECS tasks"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_tasks.id]
+  }
+
+  egress {
+    description = "Allow outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "aws-container-platform-${var.environment}-vpc-endpoints"
   }
 }
