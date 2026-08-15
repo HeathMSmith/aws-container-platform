@@ -44,7 +44,7 @@ output "vpc_id" {
 }
 
 output "public_subnet_ids" {
-  description = "IDs of the public subnets used by ECS Fargate tasks."
+  description = "IDs of the public subnets used by the Application Load Balancer."
   value = [
     aws_subnet.public_a.id,
     aws_subnet.public_b.id
@@ -74,4 +74,27 @@ output "alb_dns_name" {
 output "alb_arn" {
   description = "ARN of the Application Load Balancer."
   value       = aws_lb.app.arn
+}
+
+output "private_subnet_ids" {
+  description = "IDs of the private subnets used by ECS Fargate tasks."
+  value = [
+    aws_subnet.private_a.id,
+    aws_subnet.private_b.id
+  ]
+}
+
+output "private_route_table_id" {
+  description = "ID of the route table associated with the private subnets."
+  value       = aws_route_table.private.id
+}
+
+output "vpc_endpoint_ids" {
+  description = "IDs of the VPC endpoints used for private AWS service connectivity."
+  value = {
+    ecr_api = aws_vpc_endpoint.ecr_api.id
+    ecr_dkr = aws_vpc_endpoint.ecr_dkr.id
+    logs    = aws_vpc_endpoint.logs.id
+    s3      = aws_vpc_endpoint.s3.id
+  }
 }
