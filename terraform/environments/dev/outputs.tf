@@ -37,3 +37,21 @@ output "ecs_task_definition_arn" {
   description = "ARN of the ECS task definition."
   value       = aws_ecs_task_definition.app.arn
 }
+
+output "vpc_id" {
+  description = "ID of the VPC used by the container platform."
+  value       = aws_vpc.app.id
+}
+
+output "public_subnet_ids" {
+  description = "IDs of the public subnets used by ECS Fargate tasks."
+  value = [
+    aws_subnet.public_a.id,
+    aws_subnet.public_b.id
+  ]
+}
+
+output "ecs_task_security_group_id" {
+  description = "ID of the security group attached to ECS Fargate tasks."
+  value       = aws_security_group.ecs_tasks.id
+}
