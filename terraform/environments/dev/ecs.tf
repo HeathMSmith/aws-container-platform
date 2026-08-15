@@ -21,6 +21,17 @@ resource "aws_ecs_task_definition" "app" {
         }
       ]
 
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"
+        ]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 10
+      }
+
       logConfiguration = {
         logDriver = "awslogs"
 
@@ -38,8 +49,13 @@ resource "aws_ecs_service" "app" {
   name            = "aws-container-platform-${var.environment}"
   cluster         = aws_ecs_cluster.app.id
   task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = 1
+  desired_count   = 2
   launch_type     = "FARGATE"
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.app.arn
