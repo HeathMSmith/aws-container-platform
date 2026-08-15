@@ -41,6 +41,12 @@ resource "aws_ecs_service" "app" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "aws-container-platform"
+    container_port   = 8000
+  }
+
   network_configuration {
     subnets = [
       aws_subnet.public_a.id,
