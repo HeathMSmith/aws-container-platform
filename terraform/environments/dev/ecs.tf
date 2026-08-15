@@ -33,3 +33,24 @@ resource "aws_ecs_task_definition" "app" {
     }
   ])
 }
+
+resource "aws_ecs_service" "app" {
+  name            = "aws-container-platform-${var.environment}"
+  cluster         = aws_ecs_cluster.app.id
+  task_definition = aws_ecs_task_definition.app.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets = [
+      aws_subnet.public_a.id,
+      aws_subnet.public_b.id
+    ]
+
+    security_groups = [
+      aws_security_group.ecs_tasks.id
+    ]
+
+    assign_public_ip = true
+  }
+}
