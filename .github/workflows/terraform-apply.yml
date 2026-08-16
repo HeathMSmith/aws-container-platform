@@ -1,0 +1,186 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Immutable ECR image tag to deploy"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply:
+    name: Terraform Apply - dev
+    runs-on: ubuntu-latest
+    environment: dev
+
+    defaults:
+      run:
+        working-directory: terraform/environments/dev
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.3"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Verify ECR image
+        env:
+          ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          aws ecr describe-images \
+            --repository-name "${ECR_REPOSITORY}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            >/dev/null
+
+          echo "Verified ECR image: ${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_image_tag: ${{ inputs.image_tag }}
+        run: |
+          terraform plan \
+            -no-color \
+            -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+      - name: Wait for ECS service stability
+        run: |
+          CLUSTER_NAME="$(terraform output -raw ecs_cluster_name)"
+          SERVICE_NAME="$(terraform output -raw ecs_service_name)"
+
+          echo "Waiting for ECS service ${SERVICE_NAME} in cluster ${CLUSTER_NAME}..."
+
+          aws ecs wait services-stable \
+            --cluster "${CLUSTER_NAME}" \
+            --services "${SERVICE_NAME}"
+
+          echo "ECS service is stable."
+
+      - name: Verify running ECS task
+        env:
+          EXPECTED_IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          CLUSTER_NAME="$(terraform output -raw ecs_cluster_name)"
+          SERVICE_NAME="$(terraform output -raw ecs_service_name)"
+          EXPECTED_IMAGE="$(terraform output -raw ecr_repository_url):${EXPECTED_IMAGE_TAG}"
+
+          TASK_ARN="$(
+            aws ecs list-tasks \
+              --cluster "${CLUSTER_NAME}" \
+              --service-name "${SERVICE_NAME}" \
+              --desired-status RUNNING \
+              --query 'taskArns[0]' \
+              --output text
+          )"
+
+          if [ -z "${TASK_ARN}" ] || [ "${TASK_ARN}" = "None" ]; then
+            echo "ERROR: No running ECS task was found."
+            exit 1
+          fi
+
+          RUNNING_IMAGE="$(
+            aws ecs describe-tasks \
+              --cluster "${CLUSTER_NAME}" \
+              --tasks "${TASK_ARN}" \
+              --query 'tasks[0].containers[0].image' \
+              --output text
+          )"
+
+          echo "Expected image: ${EXPECTED_IMAGE}"
+          echo "Running image:  ${RUNNING_IMAGE}"
+
+          if [ "${RUNNING_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
+            echo "ERROR: Running ECS task does not use the requested image."
+            exit 1
+          fi
+
+          echo "Verified running ECS task uses the requested image."
+
+      - name: Verify deployed container image
+        env:
+          EXPECTED_IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          TASK_DEFINITION_ARN="$(terraform output -raw ecs_task_definition_arn)"
+
+          DEPLOYED_IMAGE="$(
+            aws ecs describe-task-definition \
+              --task-definition "${TASK_DEFINITION_ARN}" \
+              --query 'taskDefinition.containerDefinitions[0].image' \
+              --output text
+          )"
+
+          EXPECTED_IMAGE="$(terraform output -raw ecr_repository_url):${EXPECTED_IMAGE_TAG}"
+
+          echo "Expected image: ${EXPECTED_IMAGE}"
+          echo "Deployed image: ${DEPLOYED_IMAGE}"
+
+          if [ "${DEPLOYED_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
+            echo "ERROR: Deployed ECS image does not match the requested image."
+            exit 1
+          fi
+
+          echo "Verified deployed ECS image."
+
+      - name: Verify application health
+        run: |
+          ALB_DNS_NAME="$(terraform output -raw alb_dns_name)"
+          HEALTH_URL="http://${ALB_DNS_NAME}/health"
+
+          echo "Checking ${HEALTH_URL}"
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 5 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            "${HEALTH_URL}"
+
+          echo
+          echo "Application health check passed."
+
+      - name: Add deployment summary
+        if: success()
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          {
+            echo "## ECS Deployment"
+            echo
+            echo "**Environment:** dev"
+            echo
+            echo "**Image tag:** \`${IMAGE_TAG}\`"
+            echo
+            echo "**Cluster:** \`$(terraform output -raw ecs_cluster_name)\`"
+            echo
+            echo "**Service:** \`$(terraform output -raw ecs_service_name)\`"
+            echo
+            echo "**Task definition:** \`$(terraform output -raw ecs_task_definition_arn)\`"
+            echo
+            echo
+            echo "Deployment and application health verification completed successfully."
+          } >> "$GITHUB_STEP_SUMMARY"
