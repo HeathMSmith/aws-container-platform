@@ -1,25 +1,19 @@
 module "network" {
   source = "../../modules/network"
 
-  project_name = "aws-container-platform"
+  project_name = var.project_name
   environment  = var.environment
   aws_region   = var.aws_region
 
-  vpc_cidr = "10.20.0.0/16"
-  public_subnet_cidrs = [
-    "10.20.1.0/24",
-    "10.20.2.0/24"
-  ]
-  private_subnet_cidrs = [
-    "10.20.11.0/24",
-    "10.20.12.0/24"
-  ]
+  vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
 }
 
 module "vpc_endpoints" {
   source = "../../modules/vpc-endpoints"
 
-  project_name                   = "aws-container-platform"
+  project_name                   = var.project_name
   environment                    = var.environment
   aws_region                     = var.aws_region
   vpc_id                         = module.network.vpc_id
@@ -29,13 +23,13 @@ module "vpc_endpoints" {
 }
 
 data "aws_ecr_repository" "app" {
-  name = "aws-container-platform"
+  name = var.project_name
 }
 
 module "alb" {
   source = "../../modules/alb"
 
-  project_name          = "aws-container-platform"
+  project_name          = var.project_name
   environment           = var.environment
   vpc_id                = module.network.vpc_id
   public_subnet_ids     = module.network.public_subnet_ids
@@ -45,7 +39,7 @@ module "alb" {
 module "ecs_services" {
   source = "../../modules/ecs-services"
 
-  project_name = "aws-container-platform"
+  project_name = var.project_name
   environment  = var.environment
   aws_region   = var.aws_region
 
