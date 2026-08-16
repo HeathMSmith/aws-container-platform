@@ -3,6 +3,13 @@ name: Terraform Apply
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: "Environment to deploy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
       image_tag:
         description: "Immutable ECR image tag to deploy"
         required: true
@@ -14,13 +21,13 @@ permissions:
 
 jobs:
   apply:
-    name: Terraform Apply - dev
+    name: Terraform Apply - ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ inputs.environment }}
 
     defaults:
       run:
-        working-directory: terraform/environments/dev
+        working-directory: terraform/environments/${{ inputs.environment }}
 
     steps:
       - name: Checkout repository
@@ -171,7 +178,7 @@ jobs:
           {
             echo "## ECS Deployment"
             echo
-            echo "**Environment:** dev"
+            echo "**Environment:** ${{ inputs.environment }}"
             echo
             echo "**Image tag:** \`${IMAGE_TAG}\`"
             echo

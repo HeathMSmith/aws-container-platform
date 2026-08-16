@@ -45,8 +45,14 @@ jobs:
         run: docker build -t aws-container-platform:ci .
 
   terraform:
-    name: Terraform Validation
+    name: Terraform Validation - ${{ matrix.environment }}
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment:
+          - dev
+          - prod
 
     steps:
       - name: Checkout repository
@@ -60,9 +66,9 @@ jobs:
         run: terraform fmt -check -recursive terraform
 
       - name: Initialize Terraform without backend
-        working-directory: terraform/environments/dev
+        working-directory: terraform/environments/${{ matrix.environment }}
         run: terraform init -backend=false
 
       - name: Validate Terraform
-        working-directory: terraform/environments/dev
+        working-directory: terraform/environments/${{ matrix.environment }}
         run: terraform validate
