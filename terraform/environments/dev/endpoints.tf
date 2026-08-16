@@ -1,73 +1,11 @@
-resource "aws_vpc_endpoint" "ecr_api" {
-  vpc_id              = aws_vpc.app.id
-  service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
-  vpc_endpoint_type   = "Interface"
-  private_dns_enabled = true
+module "vpc_endpoints" {
+  source = "../../modules/vpc-endpoints"
 
-  subnet_ids = [
-    aws_subnet.private_a.id,
-    aws_subnet.private_b.id
-  ]
-
-  security_group_ids = [
-    aws_security_group.vpc_endpoints.id
-  ]
-
-  tags = {
-    Name = "aws-container-platform-${var.environment}-ecr-api"
-  }
-}
-
-resource "aws_vpc_endpoint" "ecr_dkr" {
-  vpc_id              = aws_vpc.app.id
-  service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
-  vpc_endpoint_type   = "Interface"
-  private_dns_enabled = true
-
-  subnet_ids = [
-    aws_subnet.private_a.id,
-    aws_subnet.private_b.id
-  ]
-
-  security_group_ids = [
-    aws_security_group.vpc_endpoints.id
-  ]
-
-  tags = {
-    Name = "aws-container-platform-${var.environment}-ecr-dkr"
-  }
-}
-
-resource "aws_vpc_endpoint" "logs" {
-  vpc_id              = aws_vpc.app.id
-  service_name        = "com.amazonaws.${var.aws_region}.logs"
-  vpc_endpoint_type   = "Interface"
-  private_dns_enabled = true
-
-  subnet_ids = [
-    aws_subnet.private_a.id,
-    aws_subnet.private_b.id
-  ]
-
-  security_group_ids = [
-    aws_security_group.vpc_endpoints.id
-  ]
-
-  tags = {
-    Name = "aws-container-platform-${var.environment}-logs"
-  }
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id            = aws_vpc.app.id
-  service_name      = "com.amazonaws.${var.aws_region}.s3"
-  vpc_endpoint_type = "Gateway"
-
-  route_table_ids = [
-    aws_route_table.private.id
-  ]
-
-  tags = {
-    Name = "aws-container-platform-${var.environment}-s3"
-  }
+  project_name                   = "aws-container-platform"
+  environment                    = var.environment
+  aws_region                     = var.aws_region
+  vpc_id                         = module.network.vpc_id
+  private_subnet_ids             = module.network.private_subnet_ids
+  private_route_table_id         = module.network.private_route_table_id
+  vpc_endpoint_security_group_id = module.network.vpc_endpoint_security_group_id
 }
