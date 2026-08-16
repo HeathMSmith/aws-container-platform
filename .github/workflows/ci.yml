@@ -51,6 +51,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.3"
 
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive terraform
