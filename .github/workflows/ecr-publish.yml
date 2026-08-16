@@ -1,0 +1,57 @@
+name: ECR Image Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "app/**"
+      - "Dockerfile"
+      - "requirements.txt"
+      - ".github/workflows/ecr-publish.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build and Publish Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUBLISHER_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and publish container image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          echo "Building ${IMAGE_URI}"
+
+          docker build \
+            --platform linux/amd64 \
+            --tag "${IMAGE_URI}" \
+            .
+
+          echo "Publishing ${IMAGE_URI}"
+
+          docker push "${IMAGE_URI}"
+
+          echo "Published image: ${IMAGE_URI}" >> "$GITHUB_STEP_SUMMARY"
