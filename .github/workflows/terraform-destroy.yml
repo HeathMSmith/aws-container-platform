@@ -34,6 +34,9 @@ jobs:
         working-directory: terraform/environments/${{ inputs.environment }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Validate destroy confirmation
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
@@ -45,9 +48,6 @@ jobs:
           fi
 
           echo "Destroy confirmed for environment: ${TARGET_ENVIRONMENT}"
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
