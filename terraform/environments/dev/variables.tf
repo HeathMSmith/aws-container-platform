@@ -1,3 +1,9 @@
+variable "project_name" {
+  description = "Name of the container platform project."
+  type        = string
+  default     = "aws-container-platform"
+}
+
 variable "aws_region" {
   description = "AWS region in which to deploy the container platform resources."
   type        = string
