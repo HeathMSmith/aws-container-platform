@@ -1,0 +1,116 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      image_tag:
+        description: "Current immutable ECR image tag"
+        required: true
+        type: string
+      confirmation:
+        description: "Type DESTROY to confirm"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  destroy:
+    name: Terraform Destroy - ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    defaults:
+      run:
+        working-directory: terraform/environments/${{ inputs.environment }}
+
+    steps:
+      - name: Validate destroy confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          TARGET_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          if [ "${CONFIRMATION}" != "DESTROY" ]; then
+            echo "ERROR: Destroy confirmation must be exactly DESTROY."
+            exit 1
+          fi
+
+          echo "Destroy confirmed for environment: ${TARGET_ENVIRONMENT}"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.3"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Create Terraform destroy plan
+        env:
+          TF_VAR_image_tag: ${{ inputs.image_tag }}
+        run: |
+          terraform plan \
+            -destroy \
+            -no-color \
+            -out=tfplan
+
+      - name: Show Terraform destroy plan
+        run: terraform show -no-color tfplan
+
+      - name: Terraform Destroy
+        run: terraform apply -auto-approve tfplan
+
+      - name: Verify Terraform state is empty
+        run: |
+          RESOURCE_COUNT="$(terraform state list | wc -l | tr -d ' ')"
+
+          echo "Resources remaining in ${{ inputs.environment }} state: ${RESOURCE_COUNT}"
+
+          if [ "${RESOURCE_COUNT}" -ne 0 ]; then
+            echo "ERROR: Terraform state is not empty after destroy."
+            terraform state list
+            exit 1
+          fi
+
+          echo "Terraform state is empty."
+
+      - name: Add destroy summary
+        if: success()
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          {
+            echo "## Terraform Destroy"
+            echo
+            echo "**Environment:** ${{ inputs.environment }}"
+            echo
+            echo "**Image tag supplied:** \`${IMAGE_TAG}\`"
+            echo
+            echo
+            echo "Terraform destroy completed successfully."
+            echo
+            echo "Environment Terraform state contains no managed resources."
+            echo
+            echo "The shared ECR foundation is managed by separate Terraform state and was not targeted by this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
