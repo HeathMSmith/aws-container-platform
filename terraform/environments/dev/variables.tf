@@ -14,3 +14,8 @@ variable "environment" {
     error_message = "Environment must be either dev or prod."
   }
 }
+
+variable "image_tag" {
+  description = "Immutable ECR image tag to deploy to the ECS service."
+  type        = string
+}
