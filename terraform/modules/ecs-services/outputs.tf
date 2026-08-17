@@ -1,13 +1,3 @@
-output "cluster_name" {
-  description = "Name of the ECS cluster."
-  value       = aws_ecs_cluster.app.name
-}
-
-output "cluster_arn" {
-  description = "ARN of the ECS cluster."
-  value       = aws_ecs_cluster.app.arn
-}
-
 output "cloudwatch_log_group_name" {
   description = "Name of the CloudWatch log group used by ECS tasks."
   value       = aws_cloudwatch_log_group.app.name
