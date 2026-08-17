@@ -30,7 +30,7 @@ The current implementation provides a working AWS container platform with the fo
 - Modular Terraform infrastructure
 - Remote Terraform state
 
-The deployed application image is currently versioned as `v0.1.0`.
+The application release convention uses a friendly immutable tag such as `v0.1.0-fastapi-health-api`, with the full Git commit SHA retained as a provenance tag on the same ECR image.
 
 ## Architecture
 
@@ -150,6 +150,19 @@ Current repository controls include:
 - Immutable image tags
 - Scan-on-push
 - AES-256 encryption
+
+### Container Image Versioning
+
+Application images use two immutable tags that represent different aspects of the same artifact:
+
+- A friendly release tag, such as `v0.1.0-fastapi-health-api`, provides a human-readable deployment identity.
+- The full Git commit SHA provides exact source-code provenance.
+
+Both tags reference the same ECR image digest. The SHA-256 digest is the authoritative identity of the container artifact.
+
+Images are built once from the source commit and initially published using the full Git SHA. When a release is created, the existing SHA-tagged image is promoted by assigning the friendly release tag to the same ECR manifest rather than rebuilding the container.
+
+Release tags are immutable and must never be reused for different application content. Mutable deployment tags such as `latest`, `dev`, `prod`, `stable`, and `current` are intentionally avoided.
 
 ### `alb`
 

@@ -11,6 +11,11 @@ on:
       - ".github/workflows/ecr-publish.yml"
 
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional immutable application release tag (for example: v0.1.0-fastapi-health-api)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -35,23 +40,101 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and publish container image
+      - name: Build or promote container image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
+          SHA_TAG: ${{ github.sha }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          SHA_IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${SHA_TAG}"
 
-          echo "Building ${IMAGE_URI}"
+          if [ -n "${RELEASE_TAG}" ]; then
+            echo "Release requested: ${RELEASE_TAG}"
+            echo "Source provenance tag: ${SHA_TAG}"
+
+            echo "Verifying source image exists in ECR"
+
+            SOURCE_DIGEST="$(
+              aws ecr describe-images \
+                --repository-name "${ECR_REPOSITORY}" \
+                --image-ids imageTag="${SHA_TAG}" \
+                --query 'imageDetails[0].imageDigest' \
+                --output text
+            )"
+
+            echo "Verified source image digest: ${SOURCE_DIGEST}"
+
+            echo "Checking that release tag is unused"
+
+            if aws ecr describe-images \
+              --repository-name "${ECR_REPOSITORY}" \
+              --image-ids imageTag="${RELEASE_TAG}" \
+              >/dev/null 2>&1; then
+              echo "ERROR: Release tag ${RELEASE_TAG} already exists and cannot be reused."
+              exit 1
+            fi
+
+            IMAGE_MANIFEST="$(
+              aws ecr batch-get-image \
+                --repository-name "${ECR_REPOSITORY}" \
+                --image-ids imageTag="${SHA_TAG}" \
+                --query 'images[0].imageManifest' \
+                --output text
+            )"
+
+            echo "Promoting existing image to release tag ${RELEASE_TAG}"
+
+            aws ecr put-image \
+              --repository-name "${ECR_REPOSITORY}" \
+              --image-tag "${RELEASE_TAG}" \
+              --image-manifest "${IMAGE_MANIFEST}" \
+              >/dev/null
+
+            RELEASE_DIGEST="$(
+              aws ecr describe-images \
+                --repository-name "${ECR_REPOSITORY}" \
+                --image-ids imageTag="${RELEASE_TAG}" \
+                --query 'imageDetails[0].imageDigest' \
+                --output text
+            )"
+
+            if [ "${SOURCE_DIGEST}" != "${RELEASE_DIGEST}" ]; then
+              echo "ERROR: Release tag digest does not match source SHA digest."
+              echo "Source digest:  ${SOURCE_DIGEST}"
+              echo "Release digest: ${RELEASE_DIGEST}"
+              exit 1
+            fi
+
+            {
+              echo "## ECR Image Release"
+              echo
+              echo "**Release tag:** \`${RELEASE_TAG}\`"
+              echo
+              echo "**Git SHA:** \`${SHA_TAG}\`"
+              echo
+              echo "**Image digest:** \`${SOURCE_DIGEST}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "Release promotion verified."
+            exit 0
+          fi
+
+          echo "Building ${SHA_IMAGE_URI}"
 
           docker build \
             --platform linux/amd64 \
-            --tag "${IMAGE_URI}" \
+            --tag "${SHA_IMAGE_URI}" \
             .
 
-          echo "Publishing ${IMAGE_URI}"
+          echo "Publishing provenance tag ${SHA_IMAGE_URI}"
 
-          docker push "${IMAGE_URI}"
+          docker push "${SHA_IMAGE_URI}"
 
-          echo "Published image: ${IMAGE_URI}" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## ECR Image Build"
+            echo
+            echo "**Git SHA:** \`${SHA_TAG}\`"
+            echo
+            echo "**Image:** \`${SHA_IMAGE_URI}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
