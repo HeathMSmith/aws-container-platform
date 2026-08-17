@@ -59,13 +59,13 @@ variable "container_port" {
 variable "task_cpu" {
   description = "CPU units allocated to the application task."
   type        = number
-  default     = 256
+  default     = 512
 }
 
 variable "task_memory" {
   description = "Memory in MiB allocated to the application task."
   type        = number
-  default     = 512
+  default     = 1024
 }
 
 variable "desired_count" {
@@ -77,5 +77,5 @@ variable "desired_count" {
 variable "log_retention_in_days" {
   description = "Number of days to retain application logs in CloudWatch."
   type        = number
-  default     = 7
+  default     = 30
 }
