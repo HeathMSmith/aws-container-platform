@@ -49,3 +49,33 @@ variable "private_subnet_cidrs" {
     "10.20.12.0/24"
   ]
 }
+
+variable "container_port" {
+  description = "Port exposed by the application container."
+  type        = number
+  default     = 8000
+}
+
+variable "task_cpu" {
+  description = "CPU units allocated to the application task."
+  type        = number
+  default     = 256
+}
+
+variable "task_memory" {
+  description = "Memory in MiB allocated to the application task."
+  type        = number
+  default     = 512
+}
+
+variable "desired_count" {
+  description = "Desired number of application tasks."
+  type        = number
+  default     = 2
+}
+
+variable "log_retention_in_days" {
+  description = "Number of days to retain application logs in CloudWatch."
+  type        = number
+  default     = 7
+}
