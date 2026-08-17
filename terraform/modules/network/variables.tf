@@ -21,9 +21,23 @@ variable "vpc_cidr" {
 variable "public_subnet_cidrs" {
   description = "CIDR blocks for the public subnets."
   type        = list(string)
+
+  validation {
+    condition = alltrue([
+      for cidr in var.public_subnet_cidrs : can(cidrhost(cidr, 0))
+    ])
+    error_message = "Every public subnet CIDR must be a valid CIDR block."
+  }
 }
 
 variable "private_subnet_cidrs" {
   description = "CIDR blocks for the private subnets."
   type        = list(string)
+
+  validation {
+    condition = alltrue([
+      for cidr in var.private_subnet_cidrs : can(cidrhost(cidr, 0))
+    ])
+    error_message = "Every private subnet CIDR must be a valid CIDR block."
+  }
 }
