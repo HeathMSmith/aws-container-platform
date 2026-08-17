@@ -8,6 +8,11 @@ variable "environment" {
   type        = string
 }
 
+variable "ecs_cluster_id" {
+  description = "ID of the ECS cluster on which the application service runs."
+  type        = string
+}
+
 variable "aws_region" {
   description = "AWS region in which ECS resources are deployed."
   type        = string

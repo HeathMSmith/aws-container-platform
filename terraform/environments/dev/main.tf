@@ -36,6 +36,13 @@ module "alb" {
   alb_security_group_id = module.network.alb_security_group_id
 }
 
+module "ecs_cluster" {
+  source = "../../modules/ecs-cluster"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
 module "ecs_services" {
   source = "../../modules/ecs-services"
 
@@ -48,6 +55,7 @@ module "ecs_services" {
   target_group_arn           = module.alb.target_group_arn
   private_subnet_ids         = module.network.private_subnet_ids
   ecs_task_security_group_id = module.network.ecs_task_security_group_id
+  ecs_cluster_id             = module.ecs_cluster.cluster_id
 }
 
 module "observability" {
@@ -55,7 +63,7 @@ module "observability" {
 
   project_name     = var.project_name
   environment      = var.environment
-  ecs_cluster_name = module.ecs_services.cluster_name
+  ecs_cluster_name = module.ecs_cluster.cluster_name
   ecs_service_name = module.ecs_services.service_name
   alb_arn          = module.alb.arn
   target_group_arn = module.alb.target_group_arn

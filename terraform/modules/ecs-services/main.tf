@@ -22,10 +22,6 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_ecs_cluster" "app" {
-  name = "${var.project_name}-${var.environment}"
-}
-
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${var.project_name}-${var.environment}"
   retention_in_days = var.log_retention_in_days
@@ -80,7 +76,7 @@ resource "aws_ecs_task_definition" "app" {
 
 resource "aws_ecs_service" "app" {
   name            = "${var.project_name}-${var.environment}"
-  cluster         = aws_ecs_cluster.app.id
+  cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
