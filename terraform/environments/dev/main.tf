@@ -49,3 +49,14 @@ module "ecs_services" {
   private_subnet_ids         = module.network.private_subnet_ids
   ecs_task_security_group_id = module.network.ecs_task_security_group_id
 }
+
+module "observability" {
+  source = "../../modules/observability"
+
+  project_name     = var.project_name
+  environment      = var.environment
+  ecs_cluster_name = module.ecs_services.cluster_name
+  ecs_service_name = module.ecs_services.service_name
+  alb_arn          = module.alb.arn
+  target_group_arn = module.alb.target_group_arn
+}
