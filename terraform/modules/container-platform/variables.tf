@@ -18,6 +18,11 @@ variable "service_hostname" {
   type        = string
 }
 
+variable "hosted_zone_id" {
+  description = "ID of the Route 53 hosted zone used for service DNS records."
+  type        = string
+}
+
 variable "aws_region" {
   description = "AWS region in which the container platform is deployed."
   type        = string

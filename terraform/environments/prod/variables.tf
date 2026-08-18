@@ -33,6 +33,12 @@ variable "service_hostname" {
   default     = "api.container.hmsdev.click"
 }
 
+variable "hosted_zone_name" {
+  description = "Name of the existing public Route 53 hosted zone used for service DNS records."
+  type        = string
+  default     = "hmsdev.click"
+}
+
 variable "image_tag" {
   description = "Immutable ECR image tag to deploy to the ECS service."
   type        = string

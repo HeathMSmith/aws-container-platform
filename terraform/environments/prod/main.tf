@@ -2,6 +2,11 @@ data "aws_ecr_repository" "app" {
   name = var.project_name
 }
 
+data "aws_route53_zone" "site" {
+  name         = var.hosted_zone_name
+  private_zone = false
+}
+
 module "container_platform" {
   source = "../../modules/container-platform"
 
@@ -9,6 +14,7 @@ module "container_platform" {
   environment      = var.environment
   service_name     = var.service_name
   service_hostname = var.service_hostname
+  hosted_zone_id   = data.aws_route53_zone.site.zone_id
   aws_region       = var.aws_region
 
   container_image                = "${data.aws_ecr_repository.app.repository_url}:${var.image_tag}"
