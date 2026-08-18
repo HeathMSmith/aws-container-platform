@@ -8,6 +8,11 @@ variable "environment" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Logical name of the application service."
+  type        = string
+}
+
 variable "service_hostname" {
   description = "Hostname used to route external traffic to the application service."
   type        = string

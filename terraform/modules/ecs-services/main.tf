@@ -1,10 +1,14 @@
+locals {
+  service_name_prefix = "${var.project_name}-${var.environment}-${var.service_name}"
+}
+
 resource "aws_cloudwatch_log_group" "app" {
-  name              = "/ecs/${var.project_name}-${var.environment}"
+  name              = "/ecs/${local.service_name_prefix}"
   retention_in_days = var.log_retention_in_days
 }
 
 resource "aws_ecs_task_definition" "app" {
-  family                   = "${var.project_name}-${var.environment}"
+  family                   = local.service_name_prefix
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 
@@ -15,7 +19,7 @@ resource "aws_ecs_task_definition" "app" {
 
   container_definitions = jsonencode([
     {
-      name      = var.project_name
+      name      = var.service_name
       image     = var.container_image
       essential = true
 
@@ -51,7 +55,7 @@ resource "aws_ecs_task_definition" "app" {
 }
 
 resource "aws_ecs_service" "app" {
-  name            = "${var.project_name}-${var.environment}"
+  name            = local.service_name_prefix
   cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.desired_count
@@ -64,7 +68,7 @@ resource "aws_ecs_service" "app" {
 
   load_balancer {
     target_group_arn = var.target_group_arn
-    container_name   = var.project_name
+    container_name   = var.service_name
     container_port   = var.container_port
   }
 
@@ -79,6 +83,8 @@ resource "aws_ecs_service" "app" {
   }
 
   lifecycle {
+    create_before_destroy = true
+
     ignore_changes = [
       desired_count
     ]

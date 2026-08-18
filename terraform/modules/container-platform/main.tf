@@ -38,6 +38,7 @@ module "alb_service_routing" {
 
   project_name     = var.project_name
   environment      = var.environment
+  service_name     = var.service_name
   service_hostname = var.service_hostname
 
   vpc_id                 = module.network.vpc_id
@@ -98,6 +99,7 @@ module "ecs_autoscaling" {
 
   project_name = var.project_name
   environment  = var.environment
+  service_name = var.service_name
 
   ecs_cluster_name = module.ecs_cluster.cluster_name
   ecs_service_name = module.ecs_services.service_name
@@ -122,6 +124,7 @@ module "observability" {
 
   project_name     = var.project_name
   environment      = var.environment
+  service_name     = var.service_name
   ecs_cluster_name = module.ecs_cluster.cluster_name
   ecs_service_name = module.ecs_services.service_name
   alb_arn          = module.alb.arn

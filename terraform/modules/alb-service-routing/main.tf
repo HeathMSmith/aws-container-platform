@@ -1,5 +1,9 @@
+locals {
+  service_name_prefix = "${var.project_name}-${var.environment}-${var.service_name}"
+}
+
 resource "aws_lb_target_group" "app" {
-  name        = "${var.project_name}-${var.environment}"
+  name        = local.service_name_prefix
   port        = var.container_port
   protocol    = "HTTP"
   target_type = "ip"
@@ -16,8 +20,12 @@ resource "aws_lb_target_group" "app" {
     unhealthy_threshold = 2
   }
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = {
-    Name = "${var.project_name}-${var.environment}"
+    Name = local.service_name_prefix
   }
 }
 

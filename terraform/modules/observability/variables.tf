@@ -8,6 +8,11 @@ variable "environment" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Logical name of the application service."
+  type        = string
+}
+
 variable "ecs_cluster_name" {
   description = "Name of the ECS cluster to monitor."
   type        = string

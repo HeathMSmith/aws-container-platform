@@ -1,5 +1,5 @@
 locals {
-  name_prefix = "${var.project_name}-${var.environment}"
+  name_prefix = "${var.project_name}-${var.environment}-${var.service_name}"
 
   alb_dimension = regex(
     "loadbalancer/(.+)$",
