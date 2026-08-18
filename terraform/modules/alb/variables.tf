@@ -13,6 +13,11 @@ variable "service_hostname" {
   type        = string
 }
 
+variable "certificate_arn" {
+  description = "ARN of the ACM certificate used by the HTTPS listener."
+  type        = string
+}
+
 variable "vpc_id" {
   description = "ID of the VPC in which the target group is created."
   type        = string

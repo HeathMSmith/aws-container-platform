@@ -18,6 +18,11 @@ variable "service_hostname" {
   type        = string
 }
 
+variable "certificate_arn" {
+  description = "ARN of the ACM certificate used for HTTPS traffic."
+  type        = string
+}
+
 variable "hosted_zone_id" {
   description = "ID of the Route 53 hosted zone used for service DNS records."
   type        = string

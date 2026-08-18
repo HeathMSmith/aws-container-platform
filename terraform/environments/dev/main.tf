@@ -7,6 +7,12 @@ data "aws_route53_zone" "site" {
   private_zone = false
 }
 
+module "tls" {
+  source = "../../modules/tls"
+
+  certificate_domain_name = var.certificate_domain_name
+  hosted_zone_id          = data.aws_route53_zone.site.id
+}
 module "container_platform" {
   source = "../../modules/container-platform"
 
@@ -14,6 +20,7 @@ module "container_platform" {
   environment      = var.environment
   service_name     = var.service_name
   service_hostname = var.service_hostname
+  certificate_arn  = module.tls.certificate_arn
   hosted_zone_id   = data.aws_route53_zone.site.zone_id
   aws_region       = var.aws_region
 
