@@ -27,12 +27,23 @@ module "alb" {
 
   project_name          = var.project_name
   environment           = var.environment
-  service_hostname      = var.service_hostname
   certificate_arn       = var.certificate_arn
   vpc_id                = module.network.vpc_id
   public_subnet_ids     = module.network.public_subnet_ids
   alb_security_group_id = module.network.alb_security_group_id
-  container_port        = var.container_port
+}
+
+module "alb_service_routing" {
+  source = "../alb-service-routing"
+
+  project_name     = var.project_name
+  environment      = var.environment
+  service_hostname = var.service_hostname
+
+  vpc_id                 = module.network.vpc_id
+  container_port         = var.container_port
+  https_listener_arn     = module.alb.https_listener_arn
+  listener_rule_priority = 100
 }
 
 module "dns" {
@@ -67,7 +78,7 @@ module "ecs_services" {
   desired_count         = var.desired_count
   log_retention_in_days = var.log_retention_in_days
 
-  target_group_arn           = module.alb.target_group_arn
+  target_group_arn           = module.alb_service_routing.target_group_arn
   private_subnet_ids         = module.network.private_subnet_ids
   ecs_task_security_group_id = module.network.ecs_task_security_group_id
   ecs_cluster_id             = module.ecs_cluster.cluster_id
@@ -97,5 +108,5 @@ module "observability" {
   ecs_cluster_name = module.ecs_cluster.cluster_name
   ecs_service_name = module.ecs_services.service_name
   alb_arn          = module.alb.arn
-  target_group_arn = module.alb.target_group_arn
+  target_group_arn = module.alb_service_routing.target_group_arn
 }
