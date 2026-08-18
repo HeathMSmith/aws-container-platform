@@ -87,3 +87,8 @@ output "vpc_endpoint_ids" {
   description = "IDs of the VPC endpoints used for private AWS service connectivity."
   value       = module.container_platform.vpc_endpoint_ids
 }
+
+output "service_url" {
+  description = "HTTPS URL of the deployed application service."
+  value       = "https://${var.service_hostname}"
+}

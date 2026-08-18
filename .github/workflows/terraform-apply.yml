@@ -153,8 +153,8 @@ jobs:
 
       - name: Verify application health
         run: |
-          ALB_DNS_NAME="$(terraform output -raw alb_dns_name)"
-          HEALTH_URL="http://${ALB_DNS_NAME}/health"
+          SERVICE_URL="$(terraform output -raw service_url)"
+          HEALTH_URL="${SERVICE_URL}/health"
 
           echo "Checking ${HEALTH_URL}"
 
