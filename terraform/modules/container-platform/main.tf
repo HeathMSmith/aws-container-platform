@@ -59,6 +59,22 @@ module "ecs_services" {
   ecs_cluster_id             = module.ecs_cluster.cluster_id
 }
 
+module "ecs_autoscaling" {
+  source = "../ecs-autoscaling"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  ecs_cluster_name = module.ecs_cluster.cluster_name
+  ecs_service_name = module.ecs_services.service_name
+
+  min_capacity       = var.autoscaling_min_capacity
+  max_capacity       = var.autoscaling_max_capacity
+  cpu_target_value   = var.autoscaling_cpu_target_value
+  scale_in_cooldown  = var.autoscaling_scale_in_cooldown
+  scale_out_cooldown = var.autoscaling_scale_out_cooldown
+}
+
 module "observability" {
   source = "../observability"
 
