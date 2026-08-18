@@ -19,6 +19,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  SERVICE_KEY: api
+
 jobs:
   apply:
     name: Terraform Apply - ${{ inputs.environment }}
@@ -76,7 +79,7 @@ jobs:
       - name: Wait for ECS service stability
         run: |
           CLUSTER_NAME="$(terraform output -raw ecs_cluster_name)"
-          SERVICE_NAME="$(terraform output -raw ecs_service_name)"
+          SERVICE_NAME="$(terraform output -json ecs_service_names | jq -r --arg key "${SERVICE_KEY}" '.[$key]')"
 
           echo "Waiting for ECS service ${SERVICE_NAME} in cluster ${CLUSTER_NAME}..."
 
@@ -91,7 +94,7 @@ jobs:
           EXPECTED_IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           CLUSTER_NAME="$(terraform output -raw ecs_cluster_name)"
-          SERVICE_NAME="$(terraform output -raw ecs_service_name)"
+          SERVICE_NAME="$(terraform output -json ecs_service_names | jq -r --arg key "${SERVICE_KEY}" '.[$key]')"
           EXPECTED_IMAGE="$(terraform output -raw ecr_repository_url):${EXPECTED_IMAGE_TAG}"
 
           TASK_ARN="$(
@@ -130,7 +133,7 @@ jobs:
         env:
           EXPECTED_IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
-          TASK_DEFINITION_ARN="$(terraform output -raw ecs_task_definition_arn)"
+          TASK_DEFINITION_ARN="$(terraform output -json ecs_task_definition_arns | jq -r --arg key "${SERVICE_KEY}" '.[$key]')"
 
           DEPLOYED_IMAGE="$(
             aws ecs describe-task-definition \
@@ -184,9 +187,9 @@ jobs:
             echo
             echo "**Cluster:** \`$(terraform output -raw ecs_cluster_name)\`"
             echo
-            echo "**Service:** \`$(terraform output -raw ecs_service_name)\`"
+            echo "**Service:** \`$(terraform output -json ecs_service_names | jq -r --arg key "${SERVICE_KEY}" '.[$key]')\`"
             echo
-            echo "**Task definition:** \`$(terraform output -raw ecs_task_definition_arn)\`"
+            echo "**Task definition:** \`$(terraform output -json ecs_task_definition_arns | jq -r --arg key "${SERVICE_KEY}" '.[$key]')\`"
             echo
             echo
             echo "Deployment and application health verification completed successfully."
