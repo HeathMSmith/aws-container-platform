@@ -34,6 +34,16 @@ module "alb" {
   container_port        = var.container_port
 }
 
+module "dns" {
+  source = "../dns"
+
+  hosted_zone_id   = var.hosted_zone_id
+  service_hostname = var.service_hostname
+
+  alb_dns_name = module.alb.dns_name
+  alb_zone_id  = module.alb.zone_id
+}
+
 module "ecs_cluster" {
   source = "../ecs-cluster"
 
