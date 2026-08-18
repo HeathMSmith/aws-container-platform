@@ -8,6 +8,11 @@ variable "environment" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Logical name of the application service."
+  type        = string
+}
+
 variable "ecs_cluster_name" {
   description = "Name of the ECS cluster to monitor."
   type        = string
@@ -38,12 +43,6 @@ variable "memory_alarm_threshold" {
   description = "ECS memory utilization percentage that triggers the high memory alarm."
   type        = number
   default     = 80
-}
-
-variable "alb_5xx_alarm_threshold" {
-  description = "Number of ALB-generated 5XX responses that triggers the ALB 5XX alarm."
-  type        = number
-  default     = 5
 }
 
 variable "target_5xx_alarm_threshold" {

@@ -1,3 +1,7 @@
+locals {
+  service_name_prefix = "${var.project_name}-${var.environment}-${var.service_name}"
+}
+
 resource "aws_appautoscaling_target" "ecs_service" {
   max_capacity       = var.max_capacity
   min_capacity       = var.min_capacity
@@ -7,7 +11,7 @@ resource "aws_appautoscaling_target" "ecs_service" {
 }
 
 resource "aws_appautoscaling_policy" "cpu_target_tracking" {
-  name               = "${var.project_name}-${var.environment}-cpu-target-tracking"
+  name               = "${local.service_name_prefix}-cpu-target-tracking"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_service.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension

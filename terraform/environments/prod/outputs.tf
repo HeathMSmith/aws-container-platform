@@ -23,9 +23,9 @@ output "ecs_cluster_arn" {
   value       = module.container_platform.ecs_cluster_arn
 }
 
-output "cloudwatch_log_group_name" {
-  description = "Name of the CloudWatch log group used by ECS tasks."
-  value       = module.container_platform.cloudwatch_log_group_name
+output "cloudwatch_log_group_names" {
+  description = "CloudWatch log group names keyed by application service."
+  value       = module.container_platform.cloudwatch_log_group_names
 }
 
 output "ecs_task_execution_role_arn" {
@@ -33,9 +33,9 @@ output "ecs_task_execution_role_arn" {
   value       = module.container_platform.ecs_task_execution_role_arn
 }
 
-output "ecs_task_definition_arn" {
-  description = "ARN of the ECS task definition."
-  value       = module.container_platform.ecs_task_definition_arn
+output "ecs_task_definition_arns" {
+  description = "ECS task definition ARNs keyed by application service."
+  value       = module.container_platform.ecs_task_definition_arns
 }
 
 output "vpc_id" {
@@ -53,14 +53,14 @@ output "ecs_task_security_group_id" {
   value       = module.container_platform.ecs_task_security_group_id
 }
 
-output "ecs_service_name" {
-  description = "Name of the ECS service running the container platform."
-  value       = module.container_platform.ecs_service_name
+output "ecs_service_names" {
+  description = "ECS service names keyed by application service."
+  value       = module.container_platform.ecs_service_names
 }
 
-output "ecs_service_arn" {
-  description = "ARN of the ECS service running the container platform."
-  value       = module.container_platform.ecs_service_arn
+output "ecs_service_arns" {
+  description = "ECS service ARNs keyed by application service."
+  value       = module.container_platform.ecs_service_arns
 }
 
 output "alb_dns_name" {

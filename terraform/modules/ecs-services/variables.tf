@@ -8,6 +8,11 @@ variable "environment" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Logical name of the application service."
+  type        = string
+}
+
 variable "ecs_cluster_id" {
   description = "ID of the ECS cluster on which the application service runs."
   type        = string
@@ -39,6 +44,11 @@ variable "task_memory" {
   description = "Memory in MiB allocated to the Fargate task."
   type        = number
   default     = 512
+}
+
+variable "task_execution_role_arn" {
+  description = "ARN of the shared IAM role used by ECS to execute tasks."
+  type        = string
 }
 
 variable "desired_count" {

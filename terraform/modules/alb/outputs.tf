@@ -13,7 +13,7 @@ output "zone_id" {
   value       = aws_lb.app.zone_id
 }
 
-output "target_group_arn" {
-  description = "ARN of the Application Load Balancer target group."
-  value       = aws_lb_target_group.app.arn
+output "https_listener_arn" {
+  description = "ARN of the shared HTTPS listener."
+  value       = aws_lb_listener.https.arn
 }
