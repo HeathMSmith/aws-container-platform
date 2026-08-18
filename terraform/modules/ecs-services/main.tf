@@ -101,4 +101,10 @@ resource "aws_ecs_service" "app" {
 
     assign_public_ip = false
   }
+
+  lifecycle {
+    ignore_changes = [
+      desired_count
+    ]
+  }
 }

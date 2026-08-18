@@ -38,6 +38,31 @@ variable "desired_count" {
   type        = number
 }
 
+variable "autoscaling_min_capacity" {
+  description = "Minimum number of ECS tasks maintained by Application Auto Scaling."
+  type        = number
+}
+
+variable "autoscaling_max_capacity" {
+  description = "Maximum number of ECS tasks allowed by Application Auto Scaling."
+  type        = number
+}
+
+variable "autoscaling_cpu_target_value" {
+  description = "Average ECS service CPU utilization percentage targeted by Application Auto Scaling."
+  type        = number
+}
+
+variable "autoscaling_scale_in_cooldown" {
+  description = "Number of seconds Application Auto Scaling waits after a scale-in activity before another scale-in activity."
+  type        = number
+}
+
+variable "autoscaling_scale_out_cooldown" {
+  description = "Number of seconds Application Auto Scaling waits after a scale-out activity before another scale-out activity."
+  type        = number
+}
+
 variable "log_retention_in_days" {
   description = "Number of days to retain application logs in CloudWatch."
   type        = number
