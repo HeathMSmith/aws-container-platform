@@ -21,6 +21,18 @@ variable "environment" {
   }
 }
 
+variable "service_name" {
+  description = "Logical name of the application service deployed on the container platform."
+  type        = string
+  default     = "api"
+}
+
+variable "service_hostname" {
+  description = "Hostname used to route external traffic to the application service."
+  type        = string
+  default     = "api.container.hmsdev.click"
+}
+
 variable "image_tag" {
   description = "Immutable ECR image tag to deploy to the ECS service."
   type        = string

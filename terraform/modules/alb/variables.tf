@@ -8,6 +8,11 @@ variable "environment" {
   type        = string
 }
 
+variable "service_hostname" {
+  description = "Hostname used to route external traffic to the application service."
+  type        = string
+}
+
 variable "vpc_id" {
   description = "ID of the VPC in which the target group is created."
   type        = string
@@ -21,4 +26,9 @@ variable "public_subnet_ids" {
 variable "alb_security_group_id" {
   description = "ID of the security group attached to the Application Load Balancer."
   type        = string
+}
+
+variable "container_port" {
+  description = "Port on which the application container receives traffic from the Application Load Balancer."
+  type        = number
 }

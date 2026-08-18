@@ -5,9 +5,11 @@ data "aws_ecr_repository" "app" {
 module "container_platform" {
   source = "../../modules/container-platform"
 
-  project_name = var.project_name
-  environment  = var.environment
-  aws_region   = var.aws_region
+  project_name     = var.project_name
+  environment      = var.environment
+  service_name     = var.service_name
+  service_hostname = var.service_hostname
+  aws_region       = var.aws_region
 
   container_image                = "${data.aws_ecr_repository.app.repository_url}:${var.image_tag}"
   container_port                 = var.container_port
