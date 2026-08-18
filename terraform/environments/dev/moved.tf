@@ -52,3 +52,28 @@ moved {
   from = module.container_platform.module.observability.aws_cloudwatch_metric_alarm.alb_5xx
   to   = module.container_platform.module.platform_observability.aws_cloudwatch_metric_alarm.alb_5xx
 }
+
+moved {
+  from = module.container_platform.module.alb_service_routing
+  to   = module.container_platform.module.alb_service_routing["api"]
+}
+
+moved {
+  from = module.container_platform.module.ecs_services
+  to   = module.container_platform.module.ecs_services["api"]
+}
+
+moved {
+  from = module.container_platform.module.ecs_autoscaling
+  to   = module.container_platform.module.ecs_autoscaling["api"]
+}
+
+moved {
+  from = module.container_platform.module.observability
+  to   = module.container_platform.module.observability["api"]
+}
+
+moved {
+  from = module.container_platform.module.dns
+  to   = module.container_platform.module.dns["api"]
+}

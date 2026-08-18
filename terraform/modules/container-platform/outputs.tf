@@ -48,9 +48,12 @@ output "ecs_cluster_arn" {
   value       = module.ecs_cluster.cluster_arn
 }
 
-output "cloudwatch_log_group_name" {
-  description = "Name of the CloudWatch log group used by ECS tasks."
-  value       = module.ecs_services.cloudwatch_log_group_name
+output "cloudwatch_log_group_names" {
+  description = "CloudWatch log group names keyed by application service."
+  value = {
+    for service_name, service in module.ecs_services :
+    service_name => service.cloudwatch_log_group_name
+  }
 }
 
 output "ecs_task_execution_role_arn" {
@@ -58,17 +61,26 @@ output "ecs_task_execution_role_arn" {
   value       = module.ecs_task_execution.role_arn
 }
 
-output "ecs_task_definition_arn" {
-  description = "ARN of the ECS task definition."
-  value       = module.ecs_services.task_definition_arn
+output "ecs_task_definition_arns" {
+  description = "ECS task definition ARNs keyed by application service."
+  value = {
+    for service_name, service in module.ecs_services :
+    service_name => service.task_definition_arn
+  }
 }
 
-output "ecs_service_name" {
-  description = "Name of the ECS service."
-  value       = module.ecs_services.service_name
+output "ecs_service_names" {
+  description = "ECS service names keyed by application service."
+  value = {
+    for service_name, service in module.ecs_services :
+    service_name => service.service_name
+  }
 }
 
-output "ecs_service_arn" {
-  description = "ARN of the ECS service."
-  value       = module.ecs_services.service_arn
+output "ecs_service_arns" {
+  description = "ECS service ARNs keyed by application service."
+  value = {
+    for service_name, service in module.ecs_services :
+    service_name => service.service_arn
+  }
 }

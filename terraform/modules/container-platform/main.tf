@@ -34,24 +34,26 @@ module "alb" {
 }
 
 module "alb_service_routing" {
-  source = "../alb-service-routing"
+  source   = "../alb-service-routing"
+  for_each = var.services
 
   project_name     = var.project_name
   environment      = var.environment
-  service_name     = var.service_name
-  service_hostname = var.service_hostname
+  service_name     = each.key
+  service_hostname = each.value.hostname
 
   vpc_id                 = module.network.vpc_id
-  container_port         = var.container_port
+  container_port         = each.value.container_port
   https_listener_arn     = module.alb.https_listener_arn
-  listener_rule_priority = 100
+  listener_rule_priority = each.value.listener_rule_priority
 }
 
 module "dns" {
-  source = "../dns"
+  source   = "../dns"
+  for_each = var.services
 
   hosted_zone_id   = var.hosted_zone_id
-  service_hostname = var.service_hostname
+  service_hostname = each.value.hostname
 
   alb_dns_name = module.alb.dns_name
   alb_zone_id  = module.alb.zone_id
@@ -72,43 +74,45 @@ module "ecs_task_execution" {
 }
 
 module "ecs_services" {
-  source = "../ecs-services"
+  source   = "../ecs-services"
+  for_each = var.services
 
   project_name = var.project_name
   environment  = var.environment
-  service_name = var.service_name
+  service_name = each.key
   aws_region   = var.aws_region
 
-  container_image         = var.container_image
-  container_port          = var.container_port
-  task_cpu                = var.task_cpu
-  task_memory             = var.task_memory
+  container_image         = each.value.container_image
+  container_port          = each.value.container_port
+  task_cpu                = each.value.task_cpu
+  task_memory             = each.value.task_memory
   task_execution_role_arn = module.ecs_task_execution.role_arn
 
-  desired_count         = var.desired_count
-  log_retention_in_days = var.log_retention_in_days
+  desired_count         = each.value.desired_count
+  log_retention_in_days = each.value.log_retention_in_days
 
-  target_group_arn           = module.alb_service_routing.target_group_arn
+  target_group_arn           = module.alb_service_routing[each.key].target_group_arn
   private_subnet_ids         = module.network.private_subnet_ids
   ecs_task_security_group_id = module.network.ecs_task_security_group_id
   ecs_cluster_id             = module.ecs_cluster.cluster_id
 }
 
 module "ecs_autoscaling" {
-  source = "../ecs-autoscaling"
+  source   = "../ecs-autoscaling"
+  for_each = var.services
 
   project_name = var.project_name
   environment  = var.environment
-  service_name = var.service_name
+  service_name = each.key
 
   ecs_cluster_name = module.ecs_cluster.cluster_name
-  ecs_service_name = module.ecs_services.service_name
+  ecs_service_name = module.ecs_services[each.key].service_name
 
-  min_capacity       = var.autoscaling_min_capacity
-  max_capacity       = var.autoscaling_max_capacity
-  cpu_target_value   = var.autoscaling_cpu_target_value
-  scale_in_cooldown  = var.autoscaling_scale_in_cooldown
-  scale_out_cooldown = var.autoscaling_scale_out_cooldown
+  min_capacity       = each.value.autoscaling_min_capacity
+  max_capacity       = each.value.autoscaling_max_capacity
+  cpu_target_value   = each.value.autoscaling_cpu_target_value
+  scale_in_cooldown  = each.value.autoscaling_scale_in_cooldown
+  scale_out_cooldown = each.value.autoscaling_scale_out_cooldown
 }
 
 module "platform_observability" {
@@ -120,13 +124,14 @@ module "platform_observability" {
 }
 
 module "observability" {
-  source = "../observability"
+  source   = "../observability"
+  for_each = var.services
 
   project_name     = var.project_name
   environment      = var.environment
-  service_name     = var.service_name
+  service_name     = each.key
   ecs_cluster_name = module.ecs_cluster.cluster_name
-  ecs_service_name = module.ecs_services.service_name
+  ecs_service_name = module.ecs_services[each.key].service_name
   alb_arn          = module.alb.arn
-  target_group_arn = module.alb_service_routing.target_group_arn
+  target_group_arn = module.alb_service_routing[each.key].target_group_arn
 }
