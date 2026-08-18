@@ -8,6 +8,16 @@ variable "environment" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Logical name of the application service deployed on the container platform."
+  type        = string
+}
+
+variable "service_hostname" {
+  description = "Hostname used to route external traffic to the application service."
+  type        = string
+}
+
 variable "aws_region" {
   description = "AWS region in which the container platform is deployed."
   type        = string

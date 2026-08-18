@@ -27,9 +27,11 @@ module "alb" {
 
   project_name          = var.project_name
   environment           = var.environment
+  service_hostname      = var.service_hostname
   vpc_id                = module.network.vpc_id
   public_subnet_ids     = module.network.public_subnet_ids
   alb_security_group_id = module.network.alb_security_group_id
+  container_port        = var.container_port
 }
 
 module "ecs_cluster" {
