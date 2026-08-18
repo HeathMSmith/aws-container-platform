@@ -39,6 +39,12 @@ variable "hosted_zone_name" {
   default     = "hmsdev.click"
 }
 
+variable "certificate_domain_name" {
+  description = "Domain name of the ACM certificate used by container platform services."
+  type        = string
+  default     = "*.container.hmsdev.click"
+}
+
 variable "image_tag" {
   description = "Immutable ECR image tag to deploy to the ECS service."
   type        = string
