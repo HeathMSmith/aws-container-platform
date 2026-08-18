@@ -37,3 +37,13 @@ moved {
   from = module.container_platform.module.alb.aws_lb_listener_rule.service
   to   = module.container_platform.module.alb_service_routing.aws_lb_listener_rule.service
 }
+
+moved {
+  from = module.container_platform.module.ecs_services.aws_iam_role.ecs_task_execution
+  to   = module.container_platform.module.ecs_task_execution.aws_iam_role.ecs_task_execution
+}
+
+moved {
+  from = module.container_platform.module.ecs_services.aws_iam_role_policy_attachment.ecs_task_execution
+  to   = module.container_platform.module.ecs_task_execution.aws_iam_role_policy_attachment.ecs_task_execution
+}

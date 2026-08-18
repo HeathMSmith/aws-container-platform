@@ -46,6 +46,11 @@ variable "task_memory" {
   default     = 512
 }
 
+variable "task_execution_role_arn" {
+  description = "ARN of the shared IAM role used by ECS to execute tasks."
+  type        = string
+}
+
 variable "desired_count" {
   description = "Desired number of ECS service tasks."
   type        = number

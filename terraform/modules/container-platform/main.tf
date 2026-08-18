@@ -63,6 +63,13 @@ module "ecs_cluster" {
   environment  = var.environment
 }
 
+module "ecs_task_execution" {
+  source = "../ecs-task-execution"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
 module "ecs_services" {
   source = "../ecs-services"
 
@@ -71,10 +78,12 @@ module "ecs_services" {
   service_name = var.service_name
   aws_region   = var.aws_region
 
-  container_image       = var.container_image
-  container_port        = var.container_port
-  task_cpu              = var.task_cpu
-  task_memory           = var.task_memory
+  container_image         = var.container_image
+  container_port          = var.container_port
+  task_cpu                = var.task_cpu
+  task_memory             = var.task_memory
+  task_execution_role_arn = module.ecs_task_execution.role_arn
+
   desired_count         = var.desired_count
   log_retention_in_days = var.log_retention_in_days
 

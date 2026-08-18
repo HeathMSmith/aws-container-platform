@@ -55,7 +55,7 @@ output "cloudwatch_log_group_name" {
 
 output "ecs_task_execution_role_arn" {
   description = "ARN of the IAM role used by ECS to execute tasks."
-  value       = module.ecs_services.task_execution_role_arn
+  value       = module.ecs_task_execution.role_arn
 }
 
 output "ecs_task_definition_arn" {
