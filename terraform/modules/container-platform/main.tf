@@ -109,6 +109,14 @@ module "ecs_autoscaling" {
   scale_out_cooldown = var.autoscaling_scale_out_cooldown
 }
 
+module "platform_observability" {
+  source = "../platform-observability"
+
+  project_name = var.project_name
+  environment  = var.environment
+  alb_arn      = module.alb.arn
+}
+
 module "observability" {
   source = "../observability"
 

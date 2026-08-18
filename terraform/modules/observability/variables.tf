@@ -40,12 +40,6 @@ variable "memory_alarm_threshold" {
   default     = 80
 }
 
-variable "alb_5xx_alarm_threshold" {
-  description = "Number of ALB-generated 5XX responses that triggers the ALB 5XX alarm."
-  type        = number
-  default     = 5
-}
-
 variable "target_5xx_alarm_threshold" {
   description = "Number of target-generated 5XX responses that triggers the target 5XX alarm."
   type        = number
