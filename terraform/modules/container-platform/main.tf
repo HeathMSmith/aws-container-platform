@@ -57,6 +57,7 @@ module "ecs_services" {
 
   project_name = var.project_name
   environment  = var.environment
+  service_name = var.service_name
   aws_region   = var.aws_region
 
   container_image       = var.container_image
