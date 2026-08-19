@@ -52,6 +52,60 @@ jobs:
             -no-color \
             -out=tfplan
 
+      - name: Add deployment scope summary
+        run: |
+          terraform show -json tfplan > tfplan.json
+
+          SERVICES="$(
+            jq -c \
+              '.planned_values.outputs.ecs_service_names.value' \
+              tfplan.json
+          )"
+
+          SERVICE_URLS="$(
+            jq -c \
+              '.planned_values.outputs.service_urls.value' \
+              tfplan.json
+          )"
+
+          SERVICE_IMAGES="$(
+            jq -c \
+              '.planned_values.outputs.service_container_images.value' \
+              tfplan.json
+          )"
+
+          {
+            echo "## Deployment Scope"
+            echo
+            echo "**Environment:** ${{ inputs.environment }}"
+            echo
+            echo "The following application services are included in this Terraform deployment:"
+            echo
+            echo "| Service | URL | Container image |"
+            echo "| --- | --- | --- |"
+
+            echo "${SERVICES}" |
+              jq -r 'keys[]' |
+              while read -r SERVICE_KEY; do
+                SERVICE_URL="$(
+                  echo "${SERVICE_URLS}" |
+                    jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+                )"
+
+                SERVICE_IMAGE="$(
+                  echo "${SERVICE_IMAGES}" |
+                    jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+                )"
+
+                echo "| \`${SERVICE_KEY}\` | ${SERVICE_URL} | \`${SERVICE_IMAGE}\` |"
+              done
+
+            echo
+            echo "Terraform Apply will deploy the complete planned service configuration for this environment."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          rm -f tfplan.json
+
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
