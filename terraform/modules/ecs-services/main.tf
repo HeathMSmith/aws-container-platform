@@ -24,15 +24,21 @@ resource "aws_ecs_task_definition" "app" {
       essential              = true
       readonlyRootFilesystem = true
 
+      environment = []
+
       linuxParameters = {
         capabilities = {
+          add  = []
           drop = ["ALL"]
         }
       }
 
+      mountPoints = []
+
       portMappings = [
         {
           containerPort = var.container_port
+          hostPort      = var.container_port
           protocol      = "tcp"
         }
       ]
@@ -57,6 +63,9 @@ resource "aws_ecs_task_definition" "app" {
           "awslogs-stream-prefix" = "app"
         }
       }
+
+      systemControls = []
+      volumesFrom    = []
     }
   ])
 }
