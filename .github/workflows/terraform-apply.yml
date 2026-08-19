@@ -10,17 +10,10 @@ on:
         options:
           - dev
           - prod
-      image_tag:
-        description: "Immutable ECR image tag to deploy"
-        required: true
-        type: string
 
 permissions:
   id-token: write
   contents: read
-
-env:
-  SERVICE_KEY: api
 
 jobs:
   apply:
@@ -50,34 +43,10 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Verify ECR image
-        env:
-          IMAGE_TAG: ${{ inputs.image_tag }}
-        run: |
-          ECR_REPOSITORY="$(
-            echo "var.ecr_repository_names[\"${SERVICE_KEY}\"]" |
-              terraform console |
-              tr -d '"'
-          )"
-
-          if [ -z "${ECR_REPOSITORY}" ]; then
-            echo "ERROR: Unable to resolve ${SERVICE_KEY} ECR repository."
-            exit 1
-          fi
-
-          aws ecr describe-images \
-            --repository-name "${ECR_REPOSITORY}" \
-            --image-ids imageTag="${IMAGE_TAG}" \
-            >/dev/null
-
-          echo "Verified ECR image: ${ECR_REPOSITORY}:${IMAGE_TAG}"
-
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
-        env:
-          TF_VAR_image_tag: ${{ inputs.image_tag }}
         run: |
           terraform plan \
             -no-color \
@@ -86,121 +55,178 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      - name: Wait for ECS service stability
+      - name: Wait for ECS services stability
         run: |
           CLUSTER_NAME="$(terraform output -raw ecs_cluster_name)"
-          SERVICE_NAME="$(terraform output -json ecs_service_names | jq -r --arg key "${SERVICE_KEY}" '.[$key]')"
+          SERVICES="$(terraform output -json ecs_service_names)"
 
-          echo "Waiting for ECS service ${SERVICE_NAME} in cluster ${CLUSTER_NAME}..."
+          echo "${SERVICES}" |
+            jq -r 'to_entries[] | "\(.key)\t\(.value)"' |
+            while IFS=$'\t' read -r SERVICE_KEY SERVICE_NAME; do
+              echo "Waiting for ${SERVICE_KEY} ECS service ${SERVICE_NAME} in cluster ${CLUSTER_NAME}..."
 
-          aws ecs wait services-stable \
-            --cluster "${CLUSTER_NAME}" \
-            --services "${SERVICE_NAME}"
+              aws ecs wait services-stable \
+                --cluster "${CLUSTER_NAME}" \
+                --services "${SERVICE_NAME}"
 
-          echo "ECS service is stable."
+              echo "ECS service ${SERVICE_KEY} is stable."
+            done
 
-      - name: Verify running ECS task
-        env:
-          EXPECTED_IMAGE_TAG: ${{ inputs.image_tag }}
+      - name: Verify running ECS tasks
         run: |
           CLUSTER_NAME="$(terraform output -raw ecs_cluster_name)"
-          SERVICE_NAME="$(terraform output -json ecs_service_names | jq -r --arg key "${SERVICE_KEY}" '.[$key]')"
-          EXPECTED_IMAGE="$(terraform output -json ecr_repository_urls | jq -r --arg key "${SERVICE_KEY}" '.[$key]'):${EXPECTED_IMAGE_TAG}"
+          SERVICES="$(terraform output -json ecs_service_names)"
+          EXPECTED_IMAGES="$(terraform output -json service_container_images)"
 
-          TASK_ARN="$(
-            aws ecs list-tasks \
-              --cluster "${CLUSTER_NAME}" \
-              --service-name "${SERVICE_NAME}" \
-              --desired-status RUNNING \
-              --query 'taskArns[0]' \
-              --output text
-          )"
+          echo "${SERVICES}" |
+            jq -r 'to_entries[] | "\(.key)\t\(.value)"' |
+            while IFS=$'\t' read -r SERVICE_KEY SERVICE_NAME; do
+              EXPECTED_IMAGE="$(
+                echo "${EXPECTED_IMAGES}" |
+                  jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+              )"
 
-          if [ -z "${TASK_ARN}" ] || [ "${TASK_ARN}" = "None" ]; then
-            echo "ERROR: No running ECS task was found."
-            exit 1
-          fi
+              TASK_ARN="$(
+                aws ecs list-tasks \
+                  --cluster "${CLUSTER_NAME}" \
+                  --service-name "${SERVICE_NAME}" \
+                  --desired-status RUNNING \
+                  --query 'taskArns[0]' \
+                  --output text
+              )"
 
-          RUNNING_IMAGE="$(
-            aws ecs describe-tasks \
-              --cluster "${CLUSTER_NAME}" \
-              --tasks "${TASK_ARN}" \
-              --query 'tasks[0].containers[0].image' \
-              --output text
-          )"
+              if [ -z "${TASK_ARN}" ] || [ "${TASK_ARN}" = "None" ]; then
+                echo "ERROR: No running ECS task was found for ${SERVICE_KEY}."
+                exit 1
+              fi
 
-          echo "Expected image: ${EXPECTED_IMAGE}"
-          echo "Running image:  ${RUNNING_IMAGE}"
+              RUNNING_IMAGE="$(
+                aws ecs describe-tasks \
+                  --cluster "${CLUSTER_NAME}" \
+                  --tasks "${TASK_ARN}" \
+                  --query 'tasks[0].containers[0].image' \
+                  --output text
+              )"
 
-          if [ "${RUNNING_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
-            echo "ERROR: Running ECS task does not use the requested image."
-            exit 1
-          fi
+              echo "${SERVICE_KEY} expected image: ${EXPECTED_IMAGE}"
+              echo "${SERVICE_KEY} running image:  ${RUNNING_IMAGE}"
 
-          echo "Verified running ECS task uses the requested image."
+              if [ "${RUNNING_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
+                echo "ERROR: Running ECS task for ${SERVICE_KEY} does not use the configured image."
+                exit 1
+              fi
 
-      - name: Verify deployed container image
-        env:
-          EXPECTED_IMAGE_TAG: ${{ inputs.image_tag }}
+              echo "Verified running ECS task for ${SERVICE_KEY}."
+            done
+
+      - name: Verify deployed container images
         run: |
-          TASK_DEFINITION_ARN="$(terraform output -json ecs_task_definition_arns | jq -r --arg key "${SERVICE_KEY}" '.[$key]')"
+          TASK_DEFINITIONS="$(terraform output -json ecs_task_definition_arns)"
+          EXPECTED_IMAGES="$(terraform output -json service_container_images)"
 
-          DEPLOYED_IMAGE="$(
-            aws ecs describe-task-definition \
-              --task-definition "${TASK_DEFINITION_ARN}" \
-              --query 'taskDefinition.containerDefinitions[0].image' \
-              --output text
-          )"
+          echo "${TASK_DEFINITIONS}" |
+            jq -r 'to_entries[] | "\(.key)\t\(.value)"' |
+            while IFS=$'\t' read -r SERVICE_KEY TASK_DEFINITION_ARN; do
+              EXPECTED_IMAGE="$(
+                echo "${EXPECTED_IMAGES}" |
+                  jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+              )"
 
-          EXPECTED_IMAGE="$(terraform output -json ecr_repository_urls | jq -r --arg key "${SERVICE_KEY}" '.[$key]'):${EXPECTED_IMAGE_TAG}"
+              DEPLOYED_IMAGE="$(
+                aws ecs describe-task-definition \
+                  --task-definition "${TASK_DEFINITION_ARN}" \
+                  --query 'taskDefinition.containerDefinitions[0].image' \
+                  --output text
+              )"
 
-          echo "Expected image: ${EXPECTED_IMAGE}"
-          echo "Deployed image: ${DEPLOYED_IMAGE}"
+              echo "${SERVICE_KEY} expected image: ${EXPECTED_IMAGE}"
+              echo "${SERVICE_KEY} deployed image: ${DEPLOYED_IMAGE}"
 
-          if [ "${DEPLOYED_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
-            echo "ERROR: Deployed ECS image does not match the requested image."
-            exit 1
-          fi
+              if [ "${DEPLOYED_IMAGE}" != "${EXPECTED_IMAGE}" ]; then
+                echo "ERROR: Deployed ECS image for ${SERVICE_KEY} does not match Terraform configuration."
+                exit 1
+              fi
 
-          echo "Verified deployed ECS image."
+              echo "Verified deployed ECS image for ${SERVICE_KEY}."
+            done
 
       - name: Verify application health
         run: |
-          SERVICE_URL="$(terraform output -raw service_url)"
-          HEALTH_URL="${SERVICE_URL}/health"
+          SERVICE_URLS="$(terraform output -json service_urls)"
 
-          echo "Checking ${HEALTH_URL}"
+          echo "${SERVICE_URLS}" |
+            jq -r 'to_entries[] | "\(.key)\t\(.value)"' |
+            while IFS=$'\t' read -r SERVICE_KEY SERVICE_URL; do
+              HEALTH_URL="${SERVICE_URL}/health"
 
-          curl \
-            --fail \
-            --silent \
-            --show-error \
-            --retry 5 \
-            --retry-delay 5 \
-            --retry-all-errors \
-            "${HEALTH_URL}"
+              echo "Checking ${SERVICE_KEY}: ${HEALTH_URL}"
 
-          echo
-          echo "Application health check passed."
+              curl \
+                --fail \
+                --silent \
+                --show-error \
+                --retry 5 \
+                --retry-delay 5 \
+                --retry-all-errors \
+                "${HEALTH_URL}"
+
+              echo
+              echo "Application health check passed for ${SERVICE_KEY}."
+            done
 
       - name: Add deployment summary
         if: success()
-        env:
-          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
+          CLUSTER_NAME="$(terraform output -raw ecs_cluster_name)"
+          SERVICES="$(terraform output -json ecs_service_names)"
+          TASK_DEFINITIONS="$(terraform output -json ecs_task_definition_arns)"
+          SERVICE_URLS="$(terraform output -json service_urls)"
+          SERVICE_IMAGES="$(terraform output -json service_container_images)"
+
           {
             echo "## ECS Deployment"
             echo
             echo "**Environment:** ${{ inputs.environment }}"
             echo
-            echo "**Image tag:** \`${IMAGE_TAG}\`"
+            echo "**Cluster:** \`${CLUSTER_NAME}\`"
             echo
-            echo "**Cluster:** \`$(terraform output -raw ecs_cluster_name)\`"
+            echo "### Services"
             echo
-            echo "**Service:** \`$(terraform output -json ecs_service_names | jq -r --arg key "${SERVICE_KEY}" '.[$key]')\`"
-            echo
-            echo "**Task definition:** \`$(terraform output -json ecs_task_definition_arns | jq -r --arg key "${SERVICE_KEY}" '.[$key]')\`"
-            echo
-            echo
+
+            echo "${SERVICES}" |
+              jq -r 'keys[]' |
+              while read -r SERVICE_KEY; do
+                SERVICE_NAME="$(
+                  echo "${SERVICES}" |
+                    jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+                )"
+
+                TASK_DEFINITION="$(
+                  echo "${TASK_DEFINITIONS}" |
+                    jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+                )"
+
+                SERVICE_URL="$(
+                  echo "${SERVICE_URLS}" |
+                    jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+                )"
+
+                SERVICE_IMAGE="$(
+                  echo "${SERVICE_IMAGES}" |
+                    jq -r --arg key "${SERVICE_KEY}" '.[$key]'
+                )"
+
+                echo "#### ${SERVICE_KEY}"
+                echo
+                echo "**Service:** \`${SERVICE_NAME}\`"
+                echo
+                echo "**Image:** \`${SERVICE_IMAGE}\`"
+                echo
+                echo "**Task definition:** \`${TASK_DEFINITION}\`"
+                echo
+                echo "**URL:** ${SERVICE_URL}"
+                echo
+              done
+
             echo "Deployment and application health verification completed successfully."
           } >> "$GITHUB_STEP_SUMMARY"

@@ -97,7 +97,15 @@ output "vpc_endpoint_ids" {
   value       = module.container_platform.vpc_endpoint_ids
 }
 
-output "service_url" {
-  description = "HTTPS URL of the deployed application service."
-  value       = "https://${var.service_hostname}"
+output "service_urls" {
+  description = "HTTPS URLs keyed by application service."
+  value = {
+    for service_name, hostname in module.container_platform.service_hostnames :
+    service_name => "https://${hostname}"
+  }
+}
+
+output "service_container_images" {
+  description = "Container image URIs keyed by application service."
+  value       = module.container_platform.service_container_images
 }

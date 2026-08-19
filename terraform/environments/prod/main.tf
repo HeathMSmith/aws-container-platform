@@ -24,7 +24,7 @@ module "container_platform" {
   services = {
     api = {
       hostname                       = var.service_hostname
-      container_image                = "${data.aws_ecr_repository.app["api"].repository_url}:${var.image_tag}"
+      container_image                = "${data.aws_ecr_repository.app["api"].repository_url}:${var.api_image_tag}"
       container_port                 = var.container_port
       task_cpu                       = var.task_cpu
       task_memory                    = var.task_memory

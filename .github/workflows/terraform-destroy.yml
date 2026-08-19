@@ -10,10 +10,6 @@ on:
         options:
           - dev
           - prod
-      image_tag:
-        description: "Current immutable ECR image tag"
-        required: true
-        type: string
       confirmation:
         description: "Type DESTROY to confirm"
         required: true
@@ -67,8 +63,6 @@ jobs:
         run: terraform validate
 
       - name: Create Terraform destroy plan
-        env:
-          TF_VAR_image_tag: ${{ inputs.image_tag }}
         run: |
           terraform plan \
             -destroy \
@@ -97,15 +91,11 @@ jobs:
 
       - name: Add destroy summary
         if: success()
-        env:
-          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           {
             echo "## Terraform Destroy"
             echo
             echo "**Environment:** ${{ inputs.environment }}"
-            echo
-            echo "**Image tag supplied:** \`${IMAGE_TAG}\`"
             echo
             echo
             echo "Terraform destroy completed successfully."
