@@ -8,6 +8,7 @@ locals {
 resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
   alarm_name          = "${var.project_name}-${var.environment}-alb-5xx"
   alarm_description   = "Application Load Balancer generated 5XX responses above the configured threshold."
+  alarm_actions       = var.alarm_action_arns
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
   threshold           = var.alb_5xx_alarm_threshold

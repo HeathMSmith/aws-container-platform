@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
+    env:
+      TF_VAR_alarm_notification_email: ${{ secrets.ALARM_NOTIFICATION_EMAIL }}
     defaults:
       run:
         working-directory: terraform/environments/${{ inputs.environment }}

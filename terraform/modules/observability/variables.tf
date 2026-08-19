@@ -56,3 +56,9 @@ variable "unhealthy_host_alarm_threshold" {
   type        = number
   default     = 1
 }
+
+variable "alarm_action_arns" {
+  description = "ARNs of actions invoked when a service CloudWatch alarm enters the ALARM state."
+  type        = list(string)
+  default     = []
+}

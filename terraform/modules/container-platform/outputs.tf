@@ -101,3 +101,8 @@ output "service_container_images" {
     service_name => service.container_image
   }
 }
+
+output "alarm_topic_arn" {
+  description = "ARN of the SNS topic used for platform alarm notifications."
+  value       = module.notifications.topic_arn
+}

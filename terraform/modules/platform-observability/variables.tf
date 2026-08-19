@@ -18,3 +18,9 @@ variable "alb_5xx_alarm_threshold" {
   type        = number
   default     = 5
 }
+
+variable "alarm_action_arns" {
+  description = "ARNs of actions invoked when a platform CloudWatch alarm enters the ALARM state."
+  type        = list(string)
+  default     = []
+}

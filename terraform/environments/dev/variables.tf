@@ -150,3 +150,10 @@ variable "log_retention_in_days" {
   type        = number
   default     = 7
 }
+
+variable "alarm_notification_email" {
+  description = "Email address subscribed to DEV platform alarm notifications."
+  type        = string
+  default     = null
+  nullable    = true
+}
