@@ -55,9 +55,16 @@ variable "certificate_domain_name" {
   default     = "*.container.hmsdev.click"
 }
 
-variable "image_tag" {
-  description = "Immutable ECR image tag to deploy to the ECS service."
+variable "api_image_tag" {
+  description = "Immutable ECR image tag deployed to the API service."
   type        = string
+  default     = "v0.1.0-fastapi-health-api"
+}
+
+variable "info_image_tag" {
+  description = "Immutable ECR image tag deployed to the INFO service."
+  type        = string
+  default     = "v0.1.0-fastapi-info-api"
 }
 
 variable "vpc_cidr" {

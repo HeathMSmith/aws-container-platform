@@ -84,3 +84,20 @@ output "ecs_service_arns" {
     service_name => service.service_arn
   }
 }
+
+output "service_hostnames" {
+  description = "DNS hostnames keyed by application service."
+  value = {
+    for service_name, service in var.services :
+    service_name => service.hostname
+  }
+}
+
+output "service_container_images" {
+  description = "Container image URIs keyed by application service."
+
+  value = {
+    for service_name, service in var.services :
+    service_name => service.container_image
+  }
+}
