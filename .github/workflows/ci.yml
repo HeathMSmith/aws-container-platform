@@ -34,15 +34,26 @@ jobs:
         run: python -m pytest -v
 
   container:
-    name: Container Build
+    name: Container Build - ${{ matrix.service }}
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - service: api
+            build_context: .
+          - service: info
+            build_context: services/info
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Build container image
-        run: docker build -t aws-container-platform:ci .
+        run: |
+          docker build \
+            -t "aws-container-platform-${{ matrix.service }}:ci" \
+            "${{ matrix.build_context }}"
 
   terraform:
     name: Terraform Validation - ${{ matrix.name }}
