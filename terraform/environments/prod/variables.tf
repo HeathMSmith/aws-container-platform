@@ -61,6 +61,12 @@ variable "api_image_tag" {
   default     = "v0.1.0-fastapi-health-api"
 }
 
+variable "info_image_tag" {
+  description = "Immutable ECR image tag deployed to the INFO service."
+  type        = string
+  default     = "v0.1.0-fastapi-info-api"
+}
+
 variable "vpc_cidr" {
   description = "CIDR block assigned to the environment VPC."
   type        = string
