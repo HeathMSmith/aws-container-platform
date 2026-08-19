@@ -55,9 +55,9 @@ jobs:
           IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           ECR_REPOSITORY="$(
-            terraform console <<EOF | tr -d '"'
-var.ecr_repository_names["${SERVICE_KEY}"]
-EOF
+            echo "var.ecr_repository_names[\"${SERVICE_KEY}\"]" |
+              terraform console |
+              tr -d '"'
           )"
 
           if [ -z "${ECR_REPOSITORY}" ]; then
