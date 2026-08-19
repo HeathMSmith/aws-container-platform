@@ -19,11 +19,16 @@ resource "aws_ecs_task_definition" "app" {
 
   container_definitions = jsonencode([
     {
-      name      = var.service_name
-      image     = var.container_image
-      essential = true
-
+      name                   = var.service_name
+      image                  = var.container_image
+      essential              = true
       readonlyRootFilesystem = true
+
+      linuxParameters = {
+        capabilities = {
+          drop = ["ALL"]
+        }
+      }
 
       portMappings = [
         {
