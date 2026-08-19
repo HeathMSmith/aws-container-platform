@@ -23,6 +23,8 @@ resource "aws_ecs_task_definition" "app" {
       image     = var.container_image
       essential = true
 
+      readonlyRootFilesystem = true
+
       portMappings = [
         {
           containerPort = var.container_port
