@@ -118,20 +118,29 @@ module "ecs_autoscaling" {
 module "platform_observability" {
   source = "../platform-observability"
 
-  project_name = var.project_name
-  environment  = var.environment
-  alb_arn      = module.alb.arn
+  project_name      = var.project_name
+  environment       = var.environment
+  alb_arn           = module.alb.arn
+  alarm_action_arns = [module.notifications.topic_arn]
 }
 
 module "observability" {
   source   = "../observability"
   for_each = var.services
 
-  project_name     = var.project_name
-  environment      = var.environment
-  service_name     = each.key
-  ecs_cluster_name = module.ecs_cluster.cluster_name
-  ecs_service_name = module.ecs_services[each.key].service_name
-  alb_arn          = module.alb.arn
-  target_group_arn = module.alb_service_routing[each.key].target_group_arn
+  project_name      = var.project_name
+  environment       = var.environment
+  service_name      = each.key
+  ecs_cluster_name  = module.ecs_cluster.cluster_name
+  ecs_service_name  = module.ecs_services[each.key].service_name
+  alb_arn           = module.alb.arn
+  target_group_arn  = module.alb_service_routing[each.key].target_group_arn
+  alarm_action_arns = [module.notifications.topic_arn]
+}
+
+module "notifications" {
+  source = "../notifications"
+
+  project_name = var.project_name
+  environment  = var.environment
 }

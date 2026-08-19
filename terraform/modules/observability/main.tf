@@ -15,6 +15,7 @@ locals {
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "${local.name_prefix}-ecs-cpu-high"
   alarm_description   = "ECS service CPU utilization is above the configured threshold."
+  alarm_actions       = var.alarm_action_arns
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 2
   threshold           = var.cpu_alarm_threshold
@@ -35,6 +36,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
 resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
   alarm_name          = "${local.name_prefix}-ecs-memory-high"
   alarm_description   = "ECS service memory utilization is above the configured threshold."
+  alarm_actions       = var.alarm_action_arns
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 2
   threshold           = var.memory_alarm_threshold
@@ -55,6 +57,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
 resource "aws_cloudwatch_metric_alarm" "target_5xx" {
   alarm_name          = "${local.name_prefix}-target-5xx"
   alarm_description   = "Application targets generated 5XX responses above the configured threshold."
+  alarm_actions       = var.alarm_action_arns
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
   threshold           = var.target_5xx_alarm_threshold
@@ -75,6 +78,7 @@ resource "aws_cloudwatch_metric_alarm" "target_5xx" {
 resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
   alarm_name          = "${local.name_prefix}-unhealthy-hosts"
   alarm_description   = "Application Load Balancer target group contains unhealthy targets."
+  alarm_actions       = var.alarm_action_arns
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 2
   threshold           = var.unhealthy_host_alarm_threshold

@@ -62,3 +62,11 @@ module "container_platform" {
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
 }
+
+resource "aws_sns_topic_subscription" "alarm_email" {
+  count = var.alarm_notification_email != null ? 1 : 0
+
+  topic_arn = module.container_platform.alarm_topic_arn
+  protocol  = "email"
+  endpoint  = var.alarm_notification_email
+}
