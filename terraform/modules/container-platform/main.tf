@@ -88,8 +88,9 @@ module "ecs_services" {
   task_memory             = each.value.task_memory
   task_execution_role_arn = module.ecs_task_execution.role_arn
 
-  desired_count         = each.value.desired_count
-  log_retention_in_days = each.value.log_retention_in_days
+  desired_count                     = each.value.desired_count
+  health_check_grace_period_seconds = each.value.health_check_grace_period_seconds
+  log_retention_in_days             = each.value.log_retention_in_days
 
   target_group_arn           = module.alb_service_routing[each.key].target_group_arn
   private_subnet_ids         = module.network.private_subnet_ids

@@ -12,19 +12,20 @@ variable "services" {
   description = "Application services deployed on the container platform."
 
   type = map(object({
-    hostname                       = string
-    container_image                = string
-    container_port                 = number
-    task_cpu                       = number
-    task_memory                    = number
-    desired_count                  = number
-    listener_rule_priority         = number
-    autoscaling_min_capacity       = number
-    autoscaling_max_capacity       = number
-    autoscaling_cpu_target_value   = number
-    autoscaling_scale_in_cooldown  = number
-    autoscaling_scale_out_cooldown = number
-    log_retention_in_days          = number
+    hostname                          = string
+    container_image                   = string
+    container_port                    = number
+    task_cpu                          = number
+    task_memory                       = number
+    desired_count                     = number
+    health_check_grace_period_seconds = number
+    listener_rule_priority            = number
+    autoscaling_min_capacity          = number
+    autoscaling_max_capacity          = number
+    autoscaling_cpu_target_value      = number
+    autoscaling_scale_in_cooldown     = number
+    autoscaling_scale_out_cooldown    = number
+    log_retention_in_days             = number
   }))
 }
 

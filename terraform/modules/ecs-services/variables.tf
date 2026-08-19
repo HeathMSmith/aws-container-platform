@@ -57,6 +57,12 @@ variable "desired_count" {
   default     = 2
 }
 
+variable "health_check_grace_period_seconds" {
+  description = "Number of seconds ECS ignores unhealthy load balancer health checks after a task starts."
+  type        = number
+  default     = 30
+}
+
 variable "log_retention_in_days" {
   description = "Number of days to retain ECS application logs in CloudWatch."
   type        = number
