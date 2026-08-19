@@ -1,0 +1,9 @@
+# Local Terraform variable overrides for the PROD environment.
+#
+# Copy this file to terraform.tfvars and replace placeholder values:
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# terraform.tfvars is intentionally excluded from version control.
+
+alarm_notification_email = "your-email@example.com"
