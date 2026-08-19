@@ -23,35 +23,37 @@ module "container_platform" {
 
   services = {
     api = {
-      hostname                       = var.service_hostname
-      container_image                = "${data.aws_ecr_repository.app["api"].repository_url}:${var.api_image_tag}"
-      container_port                 = var.container_port
-      task_cpu                       = var.task_cpu
-      task_memory                    = var.task_memory
-      desired_count                  = var.desired_count
-      listener_rule_priority         = 100
-      autoscaling_min_capacity       = var.autoscaling_min_capacity
-      autoscaling_max_capacity       = var.autoscaling_max_capacity
-      autoscaling_cpu_target_value   = var.autoscaling_cpu_target_value
-      autoscaling_scale_in_cooldown  = var.autoscaling_scale_in_cooldown
-      autoscaling_scale_out_cooldown = var.autoscaling_scale_out_cooldown
-      log_retention_in_days          = var.log_retention_in_days
+      hostname                          = var.service_hostname
+      container_image                   = "${data.aws_ecr_repository.app["api"].repository_url}:${var.api_image_tag}"
+      container_port                    = var.container_port
+      task_cpu                          = var.task_cpu
+      task_memory                       = var.task_memory
+      desired_count                     = var.desired_count
+      health_check_grace_period_seconds = 30
+      listener_rule_priority            = 100
+      autoscaling_min_capacity          = var.autoscaling_min_capacity
+      autoscaling_max_capacity          = var.autoscaling_max_capacity
+      autoscaling_cpu_target_value      = var.autoscaling_cpu_target_value
+      autoscaling_scale_in_cooldown     = var.autoscaling_scale_in_cooldown
+      autoscaling_scale_out_cooldown    = var.autoscaling_scale_out_cooldown
+      log_retention_in_days             = var.log_retention_in_days
     }
 
     info = {
-      hostname                       = "info-dev.container.hmsdev.click"
-      container_image                = "${data.aws_ecr_repository.app["info"].repository_url}:${var.info_image_tag}"
-      container_port                 = var.container_port
-      task_cpu                       = var.task_cpu
-      task_memory                    = var.task_memory
-      desired_count                  = var.desired_count
-      listener_rule_priority         = 110
-      autoscaling_min_capacity       = var.autoscaling_min_capacity
-      autoscaling_max_capacity       = var.autoscaling_max_capacity
-      autoscaling_cpu_target_value   = var.autoscaling_cpu_target_value
-      autoscaling_scale_in_cooldown  = var.autoscaling_scale_in_cooldown
-      autoscaling_scale_out_cooldown = var.autoscaling_scale_out_cooldown
-      log_retention_in_days          = var.log_retention_in_days
+      hostname                          = "info-dev.container.hmsdev.click"
+      container_image                   = "${data.aws_ecr_repository.app["info"].repository_url}:${var.info_image_tag}"
+      container_port                    = var.container_port
+      task_cpu                          = var.task_cpu
+      task_memory                       = var.task_memory
+      desired_count                     = var.desired_count
+      health_check_grace_period_seconds = 30
+      listener_rule_priority            = 110
+      autoscaling_min_capacity          = var.autoscaling_min_capacity
+      autoscaling_max_capacity          = var.autoscaling_max_capacity
+      autoscaling_cpu_target_value      = var.autoscaling_cpu_target_value
+      autoscaling_scale_in_cooldown     = var.autoscaling_scale_in_cooldown
+      autoscaling_scale_out_cooldown    = var.autoscaling_scale_out_cooldown
+      log_retention_in_days             = var.log_retention_in_days
     }
   }
   certificate_arn = module.tls.certificate_arn
