@@ -4,6 +4,16 @@ variable "project_name" {
   default     = "aws-container-platform"
 }
 
+variable "ecr_repository_names" {
+  description = "ECR repository names keyed by application service."
+  type        = map(string)
+
+  default = {
+    api  = "aws-container-platform-api"
+    info = "aws-container-platform-info"
+  }
+}
+
 variable "aws_region" {
   description = "AWS region in which to deploy the container platform resources."
   type        = string

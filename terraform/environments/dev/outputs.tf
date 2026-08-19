@@ -1,16 +1,25 @@
-output "ecr_repository_name" {
-  description = "Name of the ECR repository."
-  value       = data.aws_ecr_repository.app.name
+output "ecr_repository_names" {
+  description = "ECR repository names keyed by application service."
+  value = {
+    for key, repository in data.aws_ecr_repository.app :
+    key => repository.name
+  }
 }
 
-output "ecr_repository_url" {
-  description = "URL used to push and pull container images."
-  value       = data.aws_ecr_repository.app.repository_url
+output "ecr_repository_urls" {
+  description = "ECR repository URLs keyed by application service."
+  value = {
+    for key, repository in data.aws_ecr_repository.app :
+    key => repository.repository_url
+  }
 }
 
-output "ecr_repository_arn" {
-  description = "ARN of the ECR repository."
-  value       = data.aws_ecr_repository.app.arn
+output "ecr_repository_arns" {
+  description = "ECR repository ARNs keyed by application service."
+  value = {
+    for key, repository in data.aws_ecr_repository.app :
+    key => repository.arn
+  }
 }
 
 output "ecs_cluster_name" {

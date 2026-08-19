@@ -44,20 +44,30 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Terraform Init
+        run: terraform init
+
       - name: Verify ECR image
         env:
-          ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
           IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
+          ECR_REPOSITORY="$(
+            terraform console <<'EOF' | tr -d '"'
+var.ecr_repository_names["api"]
+EOF
+          )"
+
+          if [ -z "${ECR_REPOSITORY}" ]; then
+            echo "ERROR: Unable to resolve API ECR repository."
+            exit 1
+          fi
+
           aws ecr describe-images \
             --repository-name "${ECR_REPOSITORY}" \
             --image-ids imageTag="${IMAGE_TAG}" \
             >/dev/null
 
           echo "Verified ECR image: ${ECR_REPOSITORY}:${IMAGE_TAG}"
-
-      - name: Terraform Init
-        run: terraform init
 
       - name: Terraform Validate
         run: terraform validate

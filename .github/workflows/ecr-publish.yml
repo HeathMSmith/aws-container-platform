@@ -12,8 +12,15 @@ on:
 
   workflow_dispatch:
     inputs:
+      service:
+        description: "Application service to publish"
+        required: true
+        type: choice
+        options:
+          - api
+          - info
       release_tag:
-        description: "Optional immutable application release tag (for example: v0.1.0-fastapi-health-api)"
+        description: "Optional immutable application release tag"
         required: false
         type: string
 
@@ -43,10 +50,31 @@ jobs:
       - name: Build or promote container image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
+          REQUESTED_SERVICE: ${{ inputs.service }}
           SHA_TAG: ${{ github.sha }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
+          SERVICE="${REQUESTED_SERVICE:-api}"
+
+          case "${SERVICE}" in
+            api)
+              ECR_REPOSITORY="aws-container-platform-api"
+              BUILD_CONTEXT="."
+              ;;
+            info)
+              ECR_REPOSITORY="aws-container-platform-info"
+              BUILD_CONTEXT="services/info"
+              ;;
+            *)
+              echo "ERROR: Unsupported service: ${SERVICE}"
+              exit 1
+              ;;
+          esac
+
+          echo "Service: ${SERVICE}"
+          echo "ECR repository: ${ECR_REPOSITORY}"
+          echo "Build context: ${BUILD_CONTEXT}"
+
           SHA_IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${SHA_TAG}"
 
           if [ -n "${RELEASE_TAG}" ]; then
@@ -125,7 +153,7 @@ jobs:
           docker build \
             --platform linux/amd64 \
             --tag "${SHA_IMAGE_URI}" \
-            .
+            "${BUILD_CONTEXT}"
 
           echo "Publishing provenance tag ${SHA_IMAGE_URI}"
 
