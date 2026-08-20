@@ -104,32 +104,29 @@ resource "aws_security_group" "alb" {
   description = "Security group for the Application Load Balancer."
   vpc_id      = aws_vpc.app.id
 
-  ingress {
-    description = "Allow HTTP traffic from internet"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow HTTPS traffic from internet"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
   tags = {
     Name = "${var.project_name}-${var.environment}-alb"
   }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http" {
+  security_group_id = aws_security_group.alb.id
+
+  description = "Allow HTTP traffic from internet"
+  from_port   = 80
+  to_port     = 80
+  ip_protocol = "tcp"
+  cidr_ipv4   = "0.0.0.0/0"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https" {
+  security_group_id = aws_security_group.alb.id
+
+  description = "Allow HTTPS traffic from internet"
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "tcp"
+  cidr_ipv4   = "0.0.0.0/0"
 }
 
 resource "aws_security_group" "ecs_tasks" {
@@ -137,24 +134,29 @@ resource "aws_security_group" "ecs_tasks" {
   description = "Security group for ECS Fargate tasks."
   vpc_id      = aws_vpc.app.id
 
-  ingress {
-    description     = "Application traffic from ALB"
-    from_port       = 8000
-    to_port         = 8000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
   tags = {
     Name = "${var.project_name}-${var.environment}-ecs-tasks"
   }
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_to_ecs" {
+  security_group_id = aws_security_group.alb.id
+
+  description                  = "Application traffic to ECS tasks"
+  from_port                    = 8000
+  to_port                      = 8000
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.ecs_tasks.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ecs_from_alb" {
+  security_group_id = aws_security_group.ecs_tasks.id
+
+  description                  = "Application traffic from ALB"
+  from_port                    = 8000
+  to_port                      = 8000
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.alb.id
 }
 
 resource "aws_security_group" "vpc_endpoints" {
@@ -162,22 +164,41 @@ resource "aws_security_group" "vpc_endpoints" {
   description = "Allow ECS tasks to access interface VPC endpoints."
   vpc_id      = aws_vpc.app.id
 
-  ingress {
-    description     = "Allow ECS tasks to access interface VPC endpoints"
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_tasks.id]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
   tags = {
     Name = "${var.project_name}-${var.environment}-vpc-endpoints"
   }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "vpc_endpoints_from_ecs" {
+  security_group_id = aws_security_group.vpc_endpoints.id
+
+  description                  = "Allow ECS tasks to access interface VPC endpoints"
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.ecs_tasks.id
+}
+
+data "aws_ec2_managed_prefix_list" "s3" {
+  name = "com.amazonaws.${var.aws_region}.s3"
+}
+
+resource "aws_vpc_security_group_egress_rule" "ecs_to_vpc_endpoints" {
+  security_group_id = aws_security_group.ecs_tasks.id
+
+  description                  = "HTTPS traffic to interface VPC endpoints"
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.vpc_endpoints.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "ecs_to_s3" {
+  security_group_id = aws_security_group.ecs_tasks.id
+
+  description    = "HTTPS traffic to Amazon S3"
+  from_port      = 443
+  to_port        = 443
+  ip_protocol    = "tcp"
+  prefix_list_id = data.aws_ec2_managed_prefix_list.s3.id
 }
