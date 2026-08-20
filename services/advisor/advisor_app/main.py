@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from app.advisor import generate_recommendation
-from app.models import AdvisorRequest, AdvisorResponse
+from .advisor import generate_recommendation
+from .models import AdvisorRequest, AdvisorResponse
 
 
 app = FastAPI(

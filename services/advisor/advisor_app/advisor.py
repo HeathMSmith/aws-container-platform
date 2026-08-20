@@ -1,4 +1,4 @@
-from app.models import (
+from .models import (
     AdvisorRequest,
     AdvisorResponse,
     ArchitectureDesign,
