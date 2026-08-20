@@ -109,3 +109,8 @@ output "service_container_images" {
   description = "Container image URIs keyed by application service."
   value       = module.container_platform.service_container_images
 }
+
+output "ecs_task_role_arns" {
+  description = "IAM task role ARNs keyed by application service."
+  value       = module.container_platform.ecs_task_role_arns
+}
