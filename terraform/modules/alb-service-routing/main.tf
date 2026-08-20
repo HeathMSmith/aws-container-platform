@@ -1,9 +1,18 @@
 locals {
   service_name_prefix = "${var.project_name}-${var.environment}-${var.service_name}"
+
+  # ALB target group names are limited to 32 characters. Preserve the
+  # human-readable service name when it fits; otherwise use a deterministic
+  # shortened name with a hash suffix to avoid collisions.
+  target_group_name = length(local.service_name_prefix) <= 32 ? local.service_name_prefix : format(
+    "%s-%s",
+    substr(local.service_name_prefix, 0, 23),
+    substr(sha1(local.service_name_prefix), 0, 8)
+  )
 }
 
 resource "aws_lb_target_group" "app" {
-  name        = local.service_name_prefix
+  name        = local.target_group_name
   port        = var.container_port
   protocol    = "HTTP"
   target_type = "ip"
