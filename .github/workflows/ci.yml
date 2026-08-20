@@ -44,6 +44,8 @@ jobs:
             build_context: .
           - service: info
             build_context: services/info
+          - service: advisor
+            build_context: services/advisor
 
     steps:
       - name: Checkout repository
