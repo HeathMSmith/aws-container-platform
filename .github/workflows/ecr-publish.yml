@@ -19,6 +19,7 @@ on:
         options:
           - api
           - info
+          - advisor
       release_tag:
         description: "Optional immutable application release tag"
         required: false
@@ -64,6 +65,10 @@ jobs:
             info)
               ECR_REPOSITORY="aws-container-platform-info"
               BUILD_CONTEXT="services/info"
+              ;;
+            advisor)
+              ECR_REPOSITORY="aws-container-platform-advisor"
+              BUILD_CONTEXT="services/advisor"
               ;;
             *)
               echo "ERROR: Unsupported service: ${SERVICE}"

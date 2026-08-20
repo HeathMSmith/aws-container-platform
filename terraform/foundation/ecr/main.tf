@@ -1,8 +1,9 @@
 locals {
   repositories = {
-    legacy = "aws-container-platform"
-    api    = "aws-container-platform-api"
-    info   = "aws-container-platform-info"
+    legacy  = "aws-container-platform"
+    api     = "aws-container-platform-api"
+    info    = "aws-container-platform-info"
+    advisor = "aws-container-platform-advisor"
   }
 }
 

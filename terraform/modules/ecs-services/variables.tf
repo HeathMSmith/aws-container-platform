@@ -51,6 +51,11 @@ variable "task_execution_role_arn" {
   type        = string
 }
 
+variable "task_role_arn" {
+  description = "ARN of the IAM role assumed by the application container."
+  type        = string
+}
+
 variable "desired_count" {
   description = "Desired number of ECS service tasks."
   type        = number

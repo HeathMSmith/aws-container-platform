@@ -73,6 +73,16 @@ module "ecs_task_execution" {
   environment  = var.environment
 }
 
+module "ecs_task_role" {
+  source   = "../ecs-task-role"
+  for_each = var.services
+
+  project_name = var.project_name
+  environment  = var.environment
+  service_name = each.key
+  policy_json  = lookup(var.service_task_policy_json, each.key, null)
+}
+
 module "ecs_services" {
   source   = "../ecs-services"
   for_each = var.services
@@ -87,6 +97,7 @@ module "ecs_services" {
   task_cpu                = each.value.task_cpu
   task_memory             = each.value.task_memory
   task_execution_role_arn = module.ecs_task_execution.role_arn
+  task_role_arn           = module.ecs_task_role[each.key].role_arn
 
   desired_count                     = each.value.desired_count
   health_check_grace_period_seconds = each.value.health_check_grace_period_seconds

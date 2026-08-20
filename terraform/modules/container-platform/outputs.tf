@@ -61,6 +61,14 @@ output "ecs_task_execution_role_arn" {
   value       = module.ecs_task_execution.role_arn
 }
 
+output "ecs_task_role_arns" {
+  description = "IAM task role ARNs keyed by application service."
+  value = {
+    for service_name, task_role in module.ecs_task_role :
+    service_name => task_role.role_arn
+  }
+}
+
 output "ecs_task_definition_arns" {
   description = "ECS task definition ARNs keyed by application service."
   value = {

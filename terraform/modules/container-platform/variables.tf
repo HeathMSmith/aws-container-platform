@@ -29,6 +29,12 @@ variable "services" {
   }))
 }
 
+variable "service_task_policy_json" {
+  description = "Optional IAM policy JSON keyed by application service."
+  type        = map(string)
+  default     = {}
+}
+
 variable "certificate_arn" {
   description = "ARN of the ACM certificate used for HTTPS traffic."
   type        = string
