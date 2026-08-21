@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkloadType(StrEnum):
@@ -44,12 +44,46 @@ class ArchitecturePriority(StrEnum):
 
 
 class AdvisorRequest(BaseModel):
-    workload_type: WorkloadType
-    traffic_pattern: TrafficPattern
-    availability_requirement: AvailabilityRequirement
-    data_requirement: DataRequirement
-    expected_scale: Scale
-    priorities: list[ArchitecturePriority] = Field(min_length=1, max_length=3)
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "workload_type": "web_application",
+                "traffic_pattern": "variable",
+                "availability_requirement": "high",
+                "data_requirement": "relational",
+                "expected_scale": "medium",
+                "priorities": [
+                    "security",
+                    "reliability",
+                    "cost_optimization",
+                ],
+            }
+        }
+    )
+
+    workload_type: WorkloadType = Field(
+        description="Type of workload the architecture needs to support."
+    )
+    traffic_pattern: TrafficPattern = Field(
+        description="Expected pattern of incoming workload demand."
+    )
+    availability_requirement: AvailabilityRequirement = Field(
+        description="Required level of workload availability."
+    )
+    data_requirement: DataRequirement = Field(
+        description="Primary persistence requirement for the workload."
+    )
+    expected_scale: Scale = Field(
+        description="Expected relative scale of the workload."
+    )
+    priorities: list[ArchitecturePriority] = Field(
+        min_length=1,
+        max_length=3,
+        description=(
+            "Select between one and three AWS Well-Architected priorities "
+            "to emphasize in the recommendation."
+        ),
+    )
 
 
 class ServiceRecommendation(BaseModel):
