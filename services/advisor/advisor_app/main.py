@@ -10,7 +10,11 @@ app = FastAPI(
 )
 
 
-@app.get("/")
+@app.get(
+    "/",
+    summary="Get service status",
+    description="Return the service name and current running status.",
+)
 def root() -> dict[str, str]:
     return {
         "service": "architecture-advisor",
@@ -18,12 +22,20 @@ def root() -> dict[str, str]:
     }
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Check service health",
+    description="Return the current health status of the service.",
+)
 def health() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-@app.get("/ready")
+@app.get(
+    "/ready",
+    summary="Check service readiness",
+    description="Return whether the service is ready to receive traffic.",
+)
 def ready() -> dict[str, str]:
     return {"status": "ready"}
 
