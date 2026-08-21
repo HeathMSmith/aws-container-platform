@@ -28,6 +28,16 @@ def ready() -> dict[str, str]:
     return {"status": "ready"}
 
 
-@app.post("/advise", response_model=AdvisorResponse)
+@app.post(
+    "/advise",
+    response_model=AdvisorResponse,
+    summary="Generate an architecture recommendation",
+    description=(
+        "Generate an AWS architecture recommendation from a set of workload "
+        "requirements. Each request field uses a predefined set of supported "
+        "values. Expand the request Schema or see Schemas → AdvisorRequest "
+        "below for the available options."
+    ),
+)
 def advise(request: AdvisorRequest) -> AdvisorResponse:
     return generate_recommendation(request)
