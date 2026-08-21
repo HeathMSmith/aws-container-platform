@@ -129,8 +129,8 @@ For a medium-scale web application with variable traffic, high availability, and
 The recommendation engine is intentionally deterministic rather than generative. That keeps architecture rules directly testable and produces predictable results for the same workload requirements.
 
 **DEV:** `https://advisor-dev.container.hmsdev.click`
-**API docs:** `https://advisor-dev.container.hmsdev.click/docs`
-**Image:** `v0.1.0-architecture-advisor`
+**Interactive API docs:** `https://advisor-dev.container.hmsdev.click/docs`
+**Image:** `v0.1.1-architecture-advisor`
 
 ---
 
@@ -158,7 +158,7 @@ services = {
 
   advisor = {
     hostname        = "advisor-dev.container.hmsdev.click"
-    container_image = "<advisor-ecr-repository>:v0.1.0-architecture-advisor"
+    container_image = "<advisor-ecr-repository>:v0.1.1-architecture-advisor"
     # ...
   }
 }
@@ -407,7 +407,7 @@ runtime verification
 
 The plan workflow provides an environment-specific Terraform plan for review. When deployment is requested, the apply workflow generates its own saved plan, summarizes the services and container images in scope, and applies that plan.
 
-A successful Terraform apply isn't treated as proof that the application is healthy. A successful Terraform apply isn't treated as proof that the application is healthy.
+A successful Terraform apply isn't treated as proof that the application is healthy.
 
 Post-deployment verification checks the runtime state, including ECS service stabilization, running tasks, the image deployed to ECS, target health, DNS, and application endpoints.
 
@@ -611,17 +611,17 @@ The current DEV environment has been deployed and verified with all three applic
 | --- | --- | --- |
 | API | `api-dev.container.hmsdev.click` | `v0.1.0-fastapi-health-api` |
 | Info | `info-dev.container.hmsdev.click` | `v0.1.0-fastapi-info-api` |
-| Architecture Advisor | `advisor-dev.container.hmsdev.click` | `v0.1.0-architecture-advisor` |
+| Architecture Advisor | `advisor-dev.container.hmsdev.click` | `v0.1.1-architecture-advisor` |
 
 At the latest verification:
 
 - all three Route 53 hostnames resolved to the shared ALB
 - `/`, `/health`, and `/ready` returned HTTP 200 for all three services
-- `POST /advise` returned a valid architecture recommendation
+- `POST /advise` returned a valid event-driven architecture recommendation using Fargate, EventBridge, SQS, and DynamoDB
 - all three ECS services were `ACTIVE`
 - each service had a desired count of 2 and two running tasks
 - the Advisor target group had two healthy targets across `us-east-1a` and `us-east-1b`
-- the Advisor deployment completed using task definition revision `:1`
+- the Advisor deployment completed using task definition revision `:2`
 - the repository was clean on `main` after the deployment configuration was merged
 
 The Advisor deployment added the third workload without replacing the existing API or Info services, which was the main test of the current multi-service platform model.
@@ -634,7 +634,7 @@ The current ECS/Fargate implementation is a working multi-service platform rathe
 
 Likely next areas of work include:
 
-- continue evolving the Architecture Advisor as a workload with real AWS dependencies
+- deepen the Architecture Advisor recommendation model with more nuanced workload analysis, AWS service selection, and architectural tradeoff logic
 - exercise per-service IAM task roles with workload-specific permissions
 - improve deployment and rollback behavior
 - expand runtime and operational verification
