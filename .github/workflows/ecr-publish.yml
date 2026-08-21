@@ -20,6 +20,10 @@ on:
           - api
           - info
           - advisor
+      source_sha:
+        description: "Git SHA provenance tag to promote"
+        required: false
+        type: string
       release_tag:
         description: "Optional immutable application release tag"
         required: false
@@ -53,6 +57,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REQUESTED_SERVICE: ${{ inputs.service }}
           SHA_TAG: ${{ github.sha }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
@@ -92,12 +97,16 @@ jobs:
           echo "ECR repository: ${ECR_REPOSITORY}"
           echo "Build context: ${BUILD_CONTEXT}"
 
-          SHA_IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${SHA_TAG}"
-
           if [ -n "${RELEASE_TAG}" ]; then
+            if [ -z "${SOURCE_SHA}" ]; then
+              echo "ERROR: source_sha is required when promoting a release tag."
+              exit 1
+            fi
+
+            SHA_TAG="${SOURCE_SHA}"
+
             echo "Release requested: ${RELEASE_TAG}"
             echo "Source provenance tag: ${SHA_TAG}"
-
             echo "Verifying source image exists in ECR"
 
             SOURCE_DIGEST="$(
@@ -164,6 +173,8 @@ jobs:
             echo "Release promotion verified."
             exit 0
           fi
+
+          SHA_IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${SHA_TAG}"
 
           echo "Building ${SHA_IMAGE_URI}"
 
