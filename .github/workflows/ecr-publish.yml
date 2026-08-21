@@ -55,7 +55,19 @@ jobs:
           SHA_TAG: ${{ github.sha }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          SERVICE="${REQUESTED_SERVICE:-api}"
+          if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            SERVICE="api"
+          elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            if [ -z "${REQUESTED_SERVICE}" ]; then
+              echo "ERROR: A service must be selected for a manual workflow run."
+              exit 1
+            fi
+
+            SERVICE="${REQUESTED_SERVICE}"
+          else
+            echo "ERROR: Unsupported workflow event: ${GITHUB_EVENT_NAME}"
+            exit 1
+          fi
 
           case "${SERVICE}" in
             api)
