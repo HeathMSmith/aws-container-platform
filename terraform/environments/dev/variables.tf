@@ -59,19 +59,19 @@ variable "certificate_domain_name" {
 variable "api_image_tag" {
   description = "Immutable ECR image tag deployed to the API service."
   type        = string
-  default     = "v0.1.0-fastapi-health-api"
+  default     = "v0.1.1-fastapi-health-api"
 }
 
 variable "info_image_tag" {
   description = "Immutable ECR image tag deployed to the INFO service."
   type        = string
-  default     = "v0.1.0-fastapi-info-api"
+  default     = "v0.1.1-fastapi-info-api"
 }
 
 variable "advisor_image_tag" {
   description = "Immutable ECR image tag deployed to the architecture advisor service."
   type        = string
-  default     = "v0.1.1-architecture-advisor"
+  default     = "v0.1.2-architecture-advisor"
 }
 
 variable "vpc_cidr" {
