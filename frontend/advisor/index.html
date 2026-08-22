@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="AWS Architecture Advisor for generating architecture recommendations from structured workload requirements.">
+  <title>AWS Architecture Advisor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <a class="brand" href="/" aria-label="AWS Architecture Advisor home">
+        <span class="brand-mark" aria-hidden="true">◇</span>
+
+        <span class="brand-text">
+          <strong>Architecture Advisor</strong>
+          <span>AWS Workbench</span>
+        </span>
+      </a>
+
+      <span class="header-status">
+        Architecture Workspace
+      </span>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-heading">
+      <div class="intro-icon" aria-hidden="true">◇</div>
+
+      <div>
+        <p class="eyebrow">Architecture Workbench</p>
+
+        <h1 id="page-heading">Design an AWS architecture</h1>
+
+        <p>
+          Define the workload requirements below. The advisor will evaluate
+          the inputs and produce an architecture recommendation with guidance,
+          tradeoffs, and next steps.
+        </p>
+      </div>
+    </section>
+
+    <div class="workspace">
+      <section class="workspace-panel requirements-panel" aria-labelledby="requirements-heading">
+        <div class="panel-heading">
+          <span class="step-number">01</span>
+
+          <div>
+            <p class="panel-kicker">Requirements</p>
+            <h2 id="requirements-heading">Workload Requirements</h2>
+          </div>
+        </div>
+
+        <form id="advisor-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="workload-type">Workload type</label>
+              <select id="workload-type" name="workload_type" required>
+                <option value="">Select workload type</option>
+                <option value="web_application">Web application</option>
+                <option value="api">API</option>
+                <option value="data_processing">Data processing</option>
+                <option value="event_driven">Event-driven</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="traffic-pattern">Traffic pattern</label>
+              <select id="traffic-pattern" name="traffic_pattern" required>
+                <option value="">Select traffic pattern</option>
+                <option value="steady">Steady</option>
+                <option value="variable">Variable</option>
+                <option value="bursty">Bursty</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="availability-requirement">
+                Availability requirement
+              </label>
+              <select id="availability-requirement" name="availability_requirement" required>
+                <option value="">Select availability</option>
+                <option value="standard">Standard</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="data-requirement">Data requirement</label>
+              <select id="data-requirement" name="data_requirement" required>
+                <option value="">Select data requirement</option>
+                <option value="none">None</option>
+                <option value="relational">Relational</option>
+                <option value="key_value">Key-value</option>
+                <option value="object_storage">Object storage</option>
+              </select>
+            </div>
+
+            <div class="field field-wide">
+              <label for="expected-scale">Expected scale</label>
+              <select id="expected-scale" name="expected_scale" required>
+                <option value="">Select expected scale</option>
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset class="priorities">
+            <legend>
+              <span class="step-number">02</span>
+              <span>Architecture Priorities</span>
+            </legend>
+
+            <p>
+              Select between one and three priorities that are most important
+              for this workload.
+            </p>
+
+            <div id="priority-options" class="priority-grid">
+              <label class="priority-option">
+                <input type="checkbox" name="priorities" value="security">
+                <span>Security</span>
+              </label>
+
+              <label class="priority-option">
+                <input type="checkbox" name="priorities" value="reliability">
+                <span>Reliability</span>
+              </label>
+
+              <label class="priority-option">
+                <input type="checkbox" name="priorities" value="performance">
+                <span>Performance</span>
+              </label>
+
+              <label class="priority-option">
+                <input type="checkbox" name="priorities" value="cost_optimization">
+                <span>Cost optimization</span>
+              </label>
+
+              <label class="priority-option">
+                <input type="checkbox" name="priorities" value="operational_excellence">
+                <span>Operational excellence</span>
+              </label>
+
+              <label class="priority-option">
+                <input type="checkbox" name="priorities" value="sustainability">
+                <span>Sustainability</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-action">
+              Generate Architecture
+            </button>
+
+            <button type="reset" class="secondary-action">
+              Reset Form
+            </button>
+          </div>
+
+          <p class="privacy-note">
+            Your inputs are not stored. Recommendations are generated on demand.
+          </p>
+
+          <p id="form-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="workspace-panel recommendation-panel" aria-labelledby="recommendation-heading">
+        <div class="recommendation-header">
+          <div>
+            <p class="panel-kicker">Analysis</p>
+            <h2 id="recommendation-heading">
+              Architecture Recommendation
+            </h2>
+          </div>
+
+          <span id="recommendation-status" class="recommendation-status">
+            Waiting for input
+          </span>
+        </div>
+
+        <div id="recommendation-empty" class="recommendation-empty">
+          <div class="recommendation-graphic" aria-hidden="true">
+            <span>◇</span>
+          </div>
+
+          <h3>Your recommendation will appear here</h3>
+
+          <p>
+            Complete the workload requirements and generate an architecture
+            to see the advisor's recommendation.
+          </p>
+        </div>
+
+        <div id="recommendation" hidden>
+          <div class="recommendation-summary">
+            <p class="result-label">Recommended Architecture</p>
+            <h3 id="architecture-name"></h3>
+            <p id="architecture-summary"></p>
+          </div>
+
+          <section aria-labelledby="services-heading">
+            <h3 id="services-heading">Recommended AWS Services</h3>
+            <div id="recommended-services"></div>
+          </section>
+
+          <section aria-labelledby="design-heading">
+            <h3 id="design-heading">Architecture Design</h3>
+
+            <dl>
+              <dt>Compute</dt>
+              <dd id="design-compute"></dd>
+
+              <dt>Networking</dt>
+              <dd id="design-networking"></dd>
+
+              <dt>Data</dt>
+              <dd id="design-data"></dd>
+
+              <dt>Security</dt>
+              <dd id="design-security"></dd>
+
+              <dt>Observability</dt>
+              <dd id="design-observability"></dd>
+            </dl>
+          </section>
+
+          <section aria-labelledby="well-architected-heading">
+            <h3 id="well-architected-heading">
+              Well-Architected Assessment
+            </h3>
+            <div id="well-architected-assessments"></div>
+          </section>
+
+          <section aria-labelledby="tradeoffs-heading">
+            <h3 id="tradeoffs-heading">Tradeoffs</h3>
+            <ul id="tradeoffs"></ul>
+          </section>
+
+          <section aria-labelledby="next-steps-heading">
+            <h3 id="next-steps-heading">Next Steps</h3>
+            <ol id="next-steps"></ol>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <section class="how-it-works" aria-labelledby="how-heading">
+      <div class="how-heading">
+        <p class="eyebrow">Workflow</p>
+        <h2 id="how-heading">How It Works</h2>
+      </div>
+
+      <ol class="workflow-steps">
+        <li>
+          <span>1</span>
+          <div>
+            <strong>Define your workload</strong>
+            <p>
+              Provide the requirements that shape the architecture.
+            </p>
+          </div>
+        </li>
+
+        <li>
+          <span>2</span>
+          <div>
+            <strong>Evaluate and recommend</strong>
+            <p>
+              The advisor evaluates the inputs against its architecture rules.
+            </p>
+          </div>
+        </li>
+
+        <li>
+          <span>3</span>
+          <div>
+            <strong>Review and take action</strong>
+            <p>
+              Examine the recommendation, tradeoffs, and suggested next steps.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .advisor import generate_recommendation
 from .models import AdvisorRequest, AdvisorResponse
@@ -7,6 +8,15 @@ from .models import AdvisorRequest, AdvisorResponse
 app = FastAPI(
     title="AWS Architecture Advisor",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+    ],
+    allow_methods=["POST"],
+    allow_headers=["Content-Type"],
 )
 
 

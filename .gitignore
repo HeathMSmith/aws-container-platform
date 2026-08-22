@@ -34,3 +34,6 @@ tfplan
 tfplan*
 *.tfvars
 *.tfvars.json
+
+# Frontend runtime configuration
+frontend/advisor/config.js
