@@ -15,6 +15,24 @@ module "tls" {
   certificate_domain_name = var.certificate_domain_name
   hosted_zone_id          = data.aws_route53_zone.site.id
 }
+
+module "advisor_frontend_tls" {
+  source = "../../modules/tls"
+
+  certificate_domain_name = var.advisor_frontend_hostname
+  hosted_zone_id          = data.aws_route53_zone.site.id
+}
+
+module "advisor_frontend" {
+  source = "../../modules/static-frontend"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  frontend_hostname = var.advisor_frontend_hostname
+  hosted_zone_id    = data.aws_route53_zone.site.id
+  certificate_arn   = module.advisor_frontend_tls.certificate_arn
+}
+
 module "container_platform" {
   source = "../../modules/container-platform"
 

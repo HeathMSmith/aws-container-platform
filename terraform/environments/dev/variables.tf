@@ -164,3 +164,9 @@ variable "alarm_notification_email" {
   default     = null
   nullable    = true
 }
+
+variable "advisor_frontend_hostname" {
+  description = "Hostname used to access the Architecture Advisor frontend."
+  type        = string
+  default     = "advisor-dev.hmsdev.click"
+}
