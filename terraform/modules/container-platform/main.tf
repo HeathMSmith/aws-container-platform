@@ -93,6 +93,7 @@ module "ecs_services" {
   aws_region   = var.aws_region
 
   container_image         = each.value.container_image
+  environment_variables   = each.value.environment_variables
   container_port          = each.value.container_port
   task_cpu                = each.value.task_cpu
   task_memory             = each.value.task_memory

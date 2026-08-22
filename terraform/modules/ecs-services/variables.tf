@@ -28,6 +28,12 @@ variable "container_image" {
   type        = string
 }
 
+variable "environment_variables" {
+  description = "Environment variables passed to the application container."
+  type        = map(string)
+  default     = {}
+}
+
 variable "container_port" {
   description = "Port exposed by the application container."
   type        = number

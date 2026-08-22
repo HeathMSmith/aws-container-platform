@@ -14,6 +14,7 @@ variable "services" {
   type = map(object({
     hostname                          = string
     container_image                   = string
+    environment_variables             = optional(map(string), {})
     container_port                    = number
     task_cpu                          = number
     task_memory                       = number
