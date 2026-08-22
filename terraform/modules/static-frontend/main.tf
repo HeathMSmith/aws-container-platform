@@ -148,3 +148,33 @@ resource "aws_route53_record" "frontend_ipv6" {
     evaluate_target_health = false
   }
 }
+
+locals {
+  static_asset_content_types = {
+    "index.html" = "text/html"
+    "app.js"     = "application/javascript"
+    "styles.css" = "text/css"
+  }
+}
+
+resource "aws_s3_object" "static_assets" {
+  for_each = local.static_asset_content_types
+
+  bucket       = aws_s3_bucket.frontend.id
+  key          = each.key
+  source       = "${var.site_source_path}/${each.key}"
+  etag         = filemd5("${var.site_source_path}/${each.key}")
+  content_type = each.value
+}
+
+resource "aws_s3_object" "runtime_config" {
+  bucket       = aws_s3_bucket.frontend.id
+  key          = "config.js"
+  content_type = "application/javascript"
+
+  content = <<-EOT
+    window.ADVISOR_CONFIG = {
+      apiUrl: ${jsonencode(var.api_url)},
+    };
+  EOT
+}
