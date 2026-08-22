@@ -253,3 +253,17 @@ def test_advise_rejects_more_than_three_priorities():
     )
 
     assert response.status_code == 422
+
+
+def test_local_frontend_origin_is_allowed():
+    response = client.options(
+        "/advise",
+        headers={
+            "Origin": "http://localhost:8080",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:8080"

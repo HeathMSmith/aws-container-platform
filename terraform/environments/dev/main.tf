@@ -74,8 +74,11 @@ module "container_platform" {
       log_retention_in_days             = var.log_retention_in_days
     }
     advisor = {
-      hostname                          = "advisor-dev.container.hmsdev.click"
-      container_image                   = "${data.aws_ecr_repository.app["advisor"].repository_url}:${var.advisor_image_tag}"
+      hostname        = "advisor-dev.container.hmsdev.click"
+      container_image = "${data.aws_ecr_repository.app["advisor"].repository_url}:${var.advisor_image_tag}"
+      environment_variables = {
+        ALLOWED_ORIGINS = "https://${var.advisor_frontend_hostname}"
+      }
       container_port                    = var.container_port
       task_cpu                          = var.task_cpu
       task_memory                       = var.task_memory

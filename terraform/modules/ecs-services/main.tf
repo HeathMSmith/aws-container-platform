@@ -25,7 +25,12 @@ resource "aws_ecs_task_definition" "app" {
       essential              = true
       readonlyRootFilesystem = true
 
-      environment = []
+      environment = [
+        for name, value in var.environment_variables : {
+          name  = name
+          value = value
+        }
+      ]
 
       linuxParameters = {
         capabilities = {
