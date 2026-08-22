@@ -22,3 +22,13 @@ variable "certificate_arn" {
   description = "ACM certificate ARN used by the CloudFront distribution."
   type        = string
 }
+
+variable "site_source_path" {
+  description = "Path to the local static frontend source files."
+  type        = string
+}
+
+variable "api_url" {
+  description = "API URL written to the frontend runtime configuration."
+  type        = string
+}
