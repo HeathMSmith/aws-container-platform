@@ -114,3 +114,23 @@ output "ecs_task_role_arns" {
   description = "IAM task role ARNs keyed by application service."
   value       = module.container_platform.ecs_task_role_arns
 }
+
+output "advisor_frontend_url" {
+  description = "HTTPS URL for the Architecture Advisor frontend."
+  value       = module.advisor_frontend.frontend_url
+}
+
+output "advisor_frontend_bucket_name" {
+  description = "Name of the S3 bucket containing the Architecture Advisor frontend."
+  value       = module.advisor_frontend.bucket_name
+}
+
+output "advisor_frontend_cloudfront_distribution_id" {
+  description = "ID of the CloudFront distribution serving the Architecture Advisor frontend."
+  value       = module.advisor_frontend.cloudfront_distribution_id
+}
+
+output "advisor_frontend_cloudfront_domain_name" {
+  description = "CloudFront domain name serving the Architecture Advisor frontend."
+  value       = module.advisor_frontend.cloudfront_domain_name
+}
