@@ -9,10 +9,30 @@ data "aws_route53_zone" "site" {
   private_zone = false
 }
 
-data "aws_acm_certificate" "service" {
-  domain      = var.certificate_domain_name
-  statuses    = ["ISSUED"]
-  most_recent = true
+module "tls" {
+  source = "../../modules/tls"
+
+  certificate_domain_name = var.certificate_domain_name
+  hosted_zone_id          = data.aws_route53_zone.site.id
+}
+
+module "advisor_frontend_tls" {
+  source = "../../modules/tls"
+
+  certificate_domain_name = var.advisor_frontend_hostname
+  hosted_zone_id          = data.aws_route53_zone.site.id
+}
+
+module "advisor_frontend" {
+  source = "../../modules/static-frontend"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  frontend_hostname = var.advisor_frontend_hostname
+  hosted_zone_id    = data.aws_route53_zone.site.id
+  certificate_arn   = module.advisor_frontend_tls.certificate_arn
+  site_source_path  = "../../../frontend/advisor"
+  api_url           = "https://${module.container_platform.service_hostnames["advisor"]}"
 }
 
 module "container_platform" {
@@ -54,9 +74,30 @@ module "container_platform" {
       autoscaling_scale_out_cooldown    = var.autoscaling_scale_out_cooldown
       log_retention_in_days             = var.log_retention_in_days
     }
+    advisor = {
+      hostname        = "advisor.container.hmsdev.click"
+      container_image = "${data.aws_ecr_repository.app["advisor"].repository_url}:${var.advisor_image_tag}"
+
+      environment_variables = {
+        ALLOWED_ORIGINS = "https://${var.advisor_frontend_hostname}"
+      }
+
+      container_port                    = var.container_port
+      task_cpu                          = var.task_cpu
+      task_memory                       = var.task_memory
+      desired_count                     = var.desired_count
+      health_check_grace_period_seconds = 30
+      listener_rule_priority            = 120
+      autoscaling_min_capacity          = var.autoscaling_min_capacity
+      autoscaling_max_capacity          = var.autoscaling_max_capacity
+      autoscaling_cpu_target_value      = var.autoscaling_cpu_target_value
+      autoscaling_scale_in_cooldown     = var.autoscaling_scale_in_cooldown
+      autoscaling_scale_out_cooldown    = var.autoscaling_scale_out_cooldown
+      log_retention_in_days             = var.log_retention_in_days
+    }
   }
 
-  certificate_arn = data.aws_acm_certificate.service.arn
+  certificate_arn = module.tls.certificate_arn
   hosted_zone_id  = data.aws_route53_zone.site.zone_id
   aws_region      = var.aws_region
 

@@ -9,8 +9,9 @@ variable "ecr_repository_names" {
   type        = map(string)
 
   default = {
-    api  = "aws-container-platform-api"
-    info = "aws-container-platform-info"
+    api     = "aws-container-platform-api"
+    info    = "aws-container-platform-info"
+    advisor = "aws-container-platform-advisor"
   }
 }
 
@@ -58,13 +59,19 @@ variable "certificate_domain_name" {
 variable "api_image_tag" {
   description = "Immutable ECR image tag deployed to the API service."
   type        = string
-  default     = "v0.1.0-fastapi-health-api"
+  default     = "v0.1.1-fastapi-health-api"
 }
 
 variable "info_image_tag" {
   description = "Immutable ECR image tag deployed to the INFO service."
   type        = string
-  default     = "v0.1.0-fastapi-info-api"
+  default     = "v0.1.1-fastapi-info-api"
+}
+
+variable "advisor_image_tag" {
+  description = "Immutable ECR image tag deployed to the architecture advisor service."
+  type        = string
+  default     = "v0.1.3-architecture-advisor"
 }
 
 variable "vpc_cidr" {
@@ -156,4 +163,10 @@ variable "alarm_notification_email" {
   type        = string
   default     = null
   nullable    = true
+}
+
+variable "advisor_frontend_hostname" {
+  description = "Hostname used to access the Architecture Advisor frontend."
+  type        = string
+  default     = "advisor.hmsdev.click"
 }
