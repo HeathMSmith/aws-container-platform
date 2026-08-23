@@ -34,7 +34,7 @@ module "advisor_frontend" {
   environment       = var.environment
   frontend_hostname = var.advisor_frontend_hostname
   hosted_zone_id    = data.aws_route53_zone.site.id
-  certificate_arn = module.advisor_frontend_tls["advisor"].certificate_arn
+  certificate_arn   = module.advisor_frontend_tls["advisor"].certificate_arn
   site_source_path  = "../../../frontend/advisor"
   api_url           = "https://${module.container_platform.service_hostnames["advisor"]}"
 }
