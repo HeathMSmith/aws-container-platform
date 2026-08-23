@@ -116,21 +116,21 @@ output "ecs_task_role_arns" {
 }
 
 output "advisor_frontend_url" {
-  description = "HTTPS URL for the Architecture Advisor frontend."
-  value       = module.advisor_frontend.frontend_url
+  description = "HTTPS URL for the Architecture Advisor frontend, or null when Advisor is disabled."
+  value       = try(module.advisor_frontend["advisor"].frontend_url, null)
 }
 
 output "advisor_frontend_bucket_name" {
-  description = "Name of the S3 bucket containing the Architecture Advisor frontend."
-  value       = module.advisor_frontend.bucket_name
+  description = "Name of the Architecture Advisor frontend S3 bucket, or null when Advisor is disabled."
+  value       = try(module.advisor_frontend["advisor"].bucket_name, null)
 }
 
 output "advisor_frontend_cloudfront_distribution_id" {
-  description = "ID of the CloudFront distribution serving the Architecture Advisor frontend."
-  value       = module.advisor_frontend.cloudfront_distribution_id
+  description = "Architecture Advisor CloudFront distribution ID, or null when Advisor is disabled."
+  value       = try(module.advisor_frontend["advisor"].cloudfront_distribution_id, null)
 }
 
 output "advisor_frontend_cloudfront_domain_name" {
-  description = "CloudFront domain name serving the Architecture Advisor frontend."
-  value       = module.advisor_frontend.cloudfront_domain_name
+  description = "Architecture Advisor CloudFront domain name, or null when Advisor is disabled."
+  value       = try(module.advisor_frontend["advisor"].cloudfront_domain_name, null)
 }

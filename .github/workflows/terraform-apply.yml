@@ -11,6 +11,24 @@ on:
           - dev
           - prod
 
+      api:
+        description: "Include API service"
+        required: true
+        type: boolean
+        default: true
+
+      info:
+        description: "Include Info service"
+        required: true
+        type: boolean
+        default: true
+
+      advisor:
+        description: "Include Architecture Advisor service"
+        required: true
+        type: boolean
+        default: true
+
 permissions:
   id-token: write
   contents: read
@@ -42,6 +60,34 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Configure enabled services
+        shell: bash
+        run: |
+          services=()
+
+          if [[ "${{ inputs.api }}" == "true" ]]; then
+            services+=("api")
+          fi
+
+          if [[ "${{ inputs.info }}" == "true" ]]; then
+            services+=("info")
+          fi
+
+          if [[ "${{ inputs.advisor }}" == "true" ]]; then
+            services+=("advisor")
+          fi
+
+          if [[ ${#services[@]} -eq 0 ]]; then
+            echo "At least one application service must be enabled."
+            exit 1
+          fi
+
+          enabled_services=$(printf '"%s",' "${services[@]}")
+          enabled_services="[${enabled_services%,}]"
+
+          echo "TF_VAR_enabled_services=${enabled_services}" >> "$GITHUB_ENV"
+          echo "Enabled services: ${enabled_services}"
 
       - name: Terraform Init
         run: terraform init

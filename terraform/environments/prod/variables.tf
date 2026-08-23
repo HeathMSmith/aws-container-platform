@@ -15,6 +15,26 @@ variable "ecr_repository_names" {
   }
 }
 
+variable "enabled_services" {
+  description = "Application services enabled for deployment in this environment."
+  type        = set(string)
+
+  default = [
+    "api",
+    "info",
+    "advisor",
+  ]
+
+  validation {
+    condition = alltrue([
+      for service in var.enabled_services :
+      contains(["api", "info", "advisor"], service)
+    ])
+
+    error_message = "enabled_services may contain only: api, info, advisor."
+  }
+}
+
 variable "aws_region" {
   description = "AWS region in which to deploy the container platform resources."
   type        = string
