@@ -17,6 +17,8 @@ module "tls" {
 }
 
 module "advisor_frontend_tls" {
+  for_each = contains(var.enabled_services, "advisor") ? toset(["advisor"]) : toset([])
+
   source = "../../modules/tls"
 
   certificate_domain_name = var.advisor_frontend_hostname
@@ -24,24 +26,21 @@ module "advisor_frontend_tls" {
 }
 
 module "advisor_frontend" {
+  for_each = contains(var.enabled_services, "advisor") ? toset(["advisor"]) : toset([])
+
   source = "../../modules/static-frontend"
 
   project_name      = var.project_name
   environment       = var.environment
   frontend_hostname = var.advisor_frontend_hostname
   hosted_zone_id    = data.aws_route53_zone.site.id
-  certificate_arn   = module.advisor_frontend_tls.certificate_arn
+  certificate_arn = module.advisor_frontend_tls["advisor"].certificate_arn
   site_source_path  = "../../../frontend/advisor"
   api_url           = "https://${module.container_platform.service_hostnames["advisor"]}"
 }
 
-module "container_platform" {
-  source = "../../modules/container-platform"
-
-  project_name = var.project_name
-  environment  = var.environment
-
-  services = {
+locals {
+  service_catalog = {
     api = {
       hostname                          = var.service_hostname
       container_image                   = "${data.aws_ecr_repository.app["api"].repository_url}:${var.api_image_tag}"
@@ -96,6 +95,20 @@ module "container_platform" {
       log_retention_in_days             = var.log_retention_in_days
     }
   }
+  deployed_services = {
+    for service_name, service in local.service_catalog :
+    service_name => service
+    if contains(var.enabled_services, service_name)
+  }
+}
+
+module "container_platform" {
+  source = "../../modules/container-platform"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  services = local.deployed_services
 
   certificate_arn = module.tls.certificate_arn
   hosted_zone_id  = data.aws_route53_zone.site.zone_id
