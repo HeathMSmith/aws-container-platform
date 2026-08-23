@@ -140,6 +140,11 @@ module "container_platform" {
   vpc_cidr             = var.vpc_cidr
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
+  bedrock_runtime_endpoint_enabled = (
+    var.advisor_bedrock_enabled &&
+    contains(keys(local.deployed_services), "advisor")
+  )
+  bedrock_runtime_model_arn = "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.advisor_bedrock_model_id}"
 }
 
 resource "aws_sns_topic_subscription" "alarm_email" {
