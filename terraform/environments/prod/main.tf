@@ -9,6 +9,21 @@ data "aws_route53_zone" "site" {
   private_zone = false
 }
 
+data "aws_iam_policy_document" "advisor_bedrock" {
+  statement {
+    sid    = "InvokeAdvisorBedrockModel"
+    effect = "Allow"
+
+    actions = [
+      "bedrock:InvokeModel",
+    ]
+
+    resources = [
+      "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.advisor_bedrock_model_id}",
+    ]
+  }
+}
+
 module "tls" {
   source = "../../modules/tls"
 
@@ -78,7 +93,9 @@ locals {
       container_image = "${data.aws_ecr_repository.app["advisor"].repository_url}:${var.advisor_image_tag}"
 
       environment_variables = {
-        ALLOWED_ORIGINS = "https://${var.advisor_frontend_hostname}"
+        ALLOWED_ORIGINS  = "https://${var.advisor_frontend_hostname}"
+        BEDROCK_ENABLED  = tostring(var.advisor_bedrock_enabled)
+        BEDROCK_MODEL_ID = var.advisor_bedrock_model_id
       }
 
       container_port                    = var.container_port
@@ -100,6 +117,12 @@ locals {
     service_name => service
     if contains(var.enabled_services, service_name)
   }
+  service_task_policy_json = (
+    var.advisor_bedrock_enabled &&
+    contains(keys(local.deployed_services), "advisor")
+    ) ? {
+    advisor = data.aws_iam_policy_document.advisor_bedrock.json
+  } : {}
 }
 
 module "container_platform" {
@@ -108,7 +131,8 @@ module "container_platform" {
   project_name = var.project_name
   environment  = var.environment
 
-  services = local.deployed_services
+  services                 = local.deployed_services
+  service_task_policy_json = local.service_task_policy_json
 
   certificate_arn = module.tls.certificate_arn
   hosted_zone_id  = data.aws_route53_zone.site.zone_id
