@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .advisor import generate_recommendation
+from .bedrock import augment_recommendation
 from .models import AdvisorRequest, AdvisorResponse
 
 app = FastAPI(
@@ -69,4 +70,12 @@ def ready() -> dict[str, str]:
     ),
 )
 def advise(request: AdvisorRequest) -> AdvisorResponse:
-    return generate_recommendation(request)
+    recommendation = generate_recommendation(request)
+    augmentation = augment_recommendation(
+        request,
+        recommendation,
+    )
+
+    return recommendation.model_copy(
+        update={"augmentation": augmentation}
+    )
