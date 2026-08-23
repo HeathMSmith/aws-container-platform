@@ -250,6 +250,65 @@
             <h3 id="next-steps-heading">Next Steps</h3>
             <ol id="next-steps"></ol>
           </section>
+
+          <section
+            id="augmentation-section"
+            class="augmentation-section"
+            aria-labelledby="augmentation-heading"
+            hidden
+          >
+            <div class="augmentation-header">
+              <div>
+                <p class="result-label">Amazon Bedrock</p>
+                <h3 id="augmentation-heading">AI-Augmented Analysis</h3>
+              </div>
+              <span
+                id="augmentation-status"
+                class="augmentation-status"
+              ></span>
+            </div>
+
+            <p
+              id="augmentation-fallback"
+              class="augmentation-fallback"
+              role="status"
+              hidden
+            ></p>
+
+            <div id="augmentation-analysis" hidden>
+              <div class="augmentation-narrative">
+                <h4>Architecture Narrative</h4>
+                <p id="architecture-narrative"></p>
+              </div>
+
+              <div class="augmentation-block">
+                <h4>Detailed Tradeoff Analysis</h4>
+                <div
+                  id="augmentation-tradeoffs"
+                  class="augmentation-tradeoff-grid"
+                ></div>
+              </div>
+
+              <div class="augmentation-block">
+                <h4>Implementation Guidance</h4>
+                <ol
+                  id="implementation-steps"
+                  class="implementation-steps"
+                ></ol>
+              </div>
+
+              <div class="augmentation-grid">
+                <article>
+                  <h4>Assumptions</h4>
+                  <ul id="augmentation-assumptions"></ul>
+                </article>
+                <article>
+                  <h4>Refinement Questions</h4>
+                  <ul id="refinement-questions"></ul>
+                </article>
+              </div>
+            </div>
+          </section>
         </div>
       </section>
     </div>
@@ -274,9 +333,10 @@
         <li>
           <span>2</span>
           <div>
-            <strong>Evaluate and recommend</strong>
+            <strong>Evaluate and enrich</strong>
             <p>
-              The advisor evaluates the inputs against its architecture rules.
+              Deterministic rules ground the recommendation, while Amazon
+              Bedrock adds reasoning and implementation guidance.
             </p>
           </div>
         </li>
