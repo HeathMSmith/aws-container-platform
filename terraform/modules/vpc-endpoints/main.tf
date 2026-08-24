@@ -57,10 +57,8 @@ data "aws_iam_policy_document" "bedrock_runtime_endpoint" {
     effect = "Allow"
 
     principals {
-      type = "AWS"
-      identifiers = [
-        var.bedrock_runtime_principal_arn,
-      ]
+      type        = "AWS"
+      identifiers = ["*"]
     }
 
     actions = [
@@ -70,6 +68,12 @@ data "aws_iam_policy_document" "bedrock_runtime_endpoint" {
     resources = [
       var.bedrock_runtime_inference_profile_arn,
     ]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:PrincipalArn"
+      values   = [var.bedrock_runtime_principal_arn]
+    }
   }
 
   statement {
@@ -77,10 +81,8 @@ data "aws_iam_policy_document" "bedrock_runtime_endpoint" {
     effect = "Allow"
 
     principals {
-      type = "AWS"
-      identifiers = [
-        var.bedrock_runtime_principal_arn,
-      ]
+      type        = "AWS"
+      identifiers = ["*"]
     }
 
     actions = [
@@ -93,6 +95,12 @@ data "aws_iam_policy_document" "bedrock_runtime_endpoint" {
       test     = "StringEquals"
       variable = "bedrock:InferenceProfileArn"
       values   = [var.bedrock_runtime_inference_profile_arn]
+    }
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:PrincipalArn"
+      values   = [var.bedrock_runtime_principal_arn]
     }
   }
 }
