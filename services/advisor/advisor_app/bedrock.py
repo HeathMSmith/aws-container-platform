@@ -16,6 +16,8 @@ from .models import (
     AdvisorResponse,
     AugmentationStatus,
     BedrockAnalysis,
+    BedrockOutputAnalysis,
+    ImplementationStep,
 )
 
 DEFAULT_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
@@ -73,7 +75,7 @@ def _get_client(region: str) -> Any:
 
 def _build_output_config() -> dict[str, Any]:
     schema = json.dumps(
-        BedrockAnalysis.model_json_schema(),
+        BedrockOutputAnalysis.model_json_schema(),
         separators=(",", ":"),
     )
 
@@ -104,6 +106,12 @@ def _build_prompt(
                 (
                     "Populate every field in the configured output schema. "
                     "Keep each section concise and workload-specific."
+                ),
+                (
+                    "Produce exactly three tradeoff analyses, five implementation "
+                    "steps, three assumptions, and three refinement questions. "
+                    "Respect every word limit in the output schema descriptions "
+                    "and do not repeat guidance across fields."
                 ),
                 (
                     "The deterministic recommendation is authoritative. "
@@ -144,7 +152,58 @@ def _extract_analysis(response: dict[str, Any]) -> BedrockAnalysis:
     if not generated_text:
         raise ValueError("Bedrock response did not contain generated text.")
 
-    return BedrockAnalysis.model_validate_json(generated_text)
+    structured_output = BedrockOutputAnalysis.model_validate_json(generated_text)
+
+    tradeoffs = structured_output.tradeoff_analysis
+    steps = structured_output.implementation_steps
+    assumptions = structured_output.assumptions
+    questions = structured_output.refinement_questions
+
+    return BedrockAnalysis(
+        architecture_narrative=structured_output.architecture_narrative,
+        tradeoff_analysis=[
+            tradeoffs.tradeoff_1,
+            tradeoffs.tradeoff_2,
+            tradeoffs.tradeoff_3,
+        ],
+        implementation_steps=[
+            ImplementationStep(
+                order=1,
+                title=steps.step_1.title,
+                description=steps.step_1.description,
+            ),
+            ImplementationStep(
+                order=2,
+                title=steps.step_2.title,
+                description=steps.step_2.description,
+            ),
+            ImplementationStep(
+                order=3,
+                title=steps.step_3.title,
+                description=steps.step_3.description,
+            ),
+            ImplementationStep(
+                order=4,
+                title=steps.step_4.title,
+                description=steps.step_4.description,
+            ),
+            ImplementationStep(
+                order=5,
+                title=steps.step_5.title,
+                description=steps.step_5.description,
+            ),
+        ],
+        assumptions=[
+            assumptions.assumption_1,
+            assumptions.assumption_2,
+            assumptions.assumption_3,
+        ],
+        refinement_questions=[
+            questions.question_1,
+            questions.question_2,
+            questions.question_3,
+        ],
+    )
 
 
 def _fallback(model_id: str) -> AdvisorAugmentation:
