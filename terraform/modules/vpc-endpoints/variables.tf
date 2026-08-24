@@ -32,3 +32,39 @@ variable "vpc_endpoint_security_group_id" {
   description = "ID of the security group attached to interface VPC endpoints."
   type        = string
 }
+
+variable "bedrock_runtime_endpoint_enabled" {
+  description = "Whether to create a private Amazon Bedrock Runtime interface endpoint."
+  type        = bool
+  default     = false
+}
+
+variable "bedrock_runtime_principal_arn" {
+  description = "IAM principal ARN allowed to invoke Amazon Bedrock through the endpoint."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition = (
+      !var.bedrock_runtime_endpoint_enabled ||
+      var.bedrock_runtime_principal_arn != null
+    )
+    error_message = "bedrock_runtime_principal_arn is required when the Bedrock Runtime endpoint is enabled."
+  }
+}
+
+variable "bedrock_runtime_model_arn" {
+  description = "Foundation model ARN allowed through the Amazon Bedrock Runtime endpoint."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition = (
+      !var.bedrock_runtime_endpoint_enabled ||
+      var.bedrock_runtime_model_arn != null
+    )
+    error_message = "bedrock_runtime_model_arn is required when the Bedrock Runtime endpoint is enabled."
+  }
+}

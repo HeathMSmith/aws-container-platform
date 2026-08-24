@@ -65,3 +65,32 @@ variable "private_subnet_cidrs" {
   description = "CIDR blocks assigned to the private subnets."
   type        = list(string)
 }
+
+variable "bedrock_runtime_endpoint_enabled" {
+  description = "Whether to create a private Bedrock Runtime endpoint for the Advisor service."
+  type        = bool
+  default     = false
+
+  validation {
+    condition = (
+      !var.bedrock_runtime_endpoint_enabled ||
+      contains(keys(var.services), "advisor")
+    )
+    error_message = "The Advisor service must be deployed when the Bedrock Runtime endpoint is enabled."
+  }
+}
+
+variable "bedrock_runtime_model_arn" {
+  description = "Foundation model ARN allowed through the Bedrock Runtime endpoint."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition = (
+      !var.bedrock_runtime_endpoint_enabled ||
+      var.bedrock_runtime_model_arn != null
+    )
+    error_message = "bedrock_runtime_model_arn is required when the Bedrock Runtime endpoint is enabled."
+  }
+}

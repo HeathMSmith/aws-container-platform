@@ -3,11 +3,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .advisor import generate_recommendation
+from .bedrock import augment_recommendation
 from .models import AdvisorRequest, AdvisorResponse
 
 app = FastAPI(
     title="AWS Architecture Advisor",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 allowed_origins = [
@@ -69,4 +70,12 @@ def ready() -> dict[str, str]:
     ),
 )
 def advise(request: AdvisorRequest) -> AdvisorResponse:
-    return generate_recommendation(request)
+    recommendation = generate_recommendation(request)
+    augmentation = augment_recommendation(
+        request,
+        recommendation,
+    )
+
+    return recommendation.model_copy(
+        update={"augmentation": augmentation}
+    )

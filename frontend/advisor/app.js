@@ -28,6 +28,21 @@ const wellArchitectedAssessments = document.getElementById(
 );
 const tradeoffsList = document.getElementById("tradeoffs");
 const nextStepsList = document.getElementById("next-steps");
+const augmentationSection = document.getElementById("augmentation-section");
+const augmentationStatus = document.getElementById("augmentation-status");
+const augmentationFallback = document.getElementById("augmentation-fallback");
+const augmentationAnalysis = document.getElementById("augmentation-analysis");
+const architectureNarrative = document.getElementById(
+    "architecture-narrative"
+);
+const augmentationTradeoffs = document.getElementById(
+    "augmentation-tradeoffs"
+);
+const implementationSteps = document.getElementById("implementation-steps");
+const augmentationAssumptions = document.getElementById(
+    "augmentation-assumptions"
+);
+const refinementQuestions = document.getElementById("refinement-questions");
 
 if (!apiUrl) {
     throw new Error("Advisor API URL is not configured.");
@@ -158,6 +173,103 @@ function renderNextSteps(nextSteps) {
     });
 }
 
+function clearAugmentationContent() {
+    recommendationPanel.classList.remove("has-augmentation");
+    augmentationSection.hidden = true;
+    augmentationStatus.textContent = "";
+    augmentationFallback.textContent = "";
+    augmentationFallback.hidden = true;
+    augmentationAnalysis.hidden = true;
+    architectureNarrative.textContent = "";
+    augmentationTradeoffs.replaceChildren();
+    implementationSteps.replaceChildren();
+    augmentationAssumptions.replaceChildren();
+    refinementQuestions.replaceChildren();
+}
+
+function renderAugmentationList(items, container) {
+    container.replaceChildren();
+
+    items.forEach((value) => {
+        const item = document.createElement("li");
+        item.textContent = value;
+        container.append(item);
+    });
+}
+
+function renderAugmentation(augmentation) {
+    clearAugmentationContent();
+
+    if (!augmentation || augmentation.status === "disabled") {
+        return;
+    }
+
+    augmentationSection.hidden = false;
+    recommendationPanel.classList.add("has-augmentation");
+
+    if (
+        augmentation.status !== "generated" ||
+        !augmentation.analysis
+    ) {
+        augmentationStatus.textContent = "Deterministic fallback";
+        augmentationFallback.textContent =
+            "Amazon Bedrock analysis is temporarily unavailable. " +
+            "The grounded recommendation above remains available.";
+        augmentationFallback.hidden = false;
+        return;
+    }
+
+    const analysis = augmentation.analysis;
+
+    augmentationStatus.textContent = "Generated";
+    augmentationAnalysis.hidden = false;
+    architectureNarrative.textContent = analysis.architecture_narrative;
+
+    analysis.tradeoff_analysis.forEach((tradeoff) => {
+        const card = document.createElement("article");
+        card.className = "augmentation-tradeoff";
+
+        const decision = document.createElement("h5");
+        decision.textContent = tradeoff.decision;
+
+        const benefit = document.createElement("p");
+        const benefitLabel = document.createElement("strong");
+        benefitLabel.textContent = "Benefit: ";
+        benefit.append(benefitLabel, tradeoff.benefit);
+
+        const consequence = document.createElement("p");
+        const consequenceLabel = document.createElement("strong");
+        consequenceLabel.textContent = "Tradeoff: ";
+        consequence.append(consequenceLabel, tradeoff.tradeoff);
+
+        card.append(decision, benefit, consequence);
+        augmentationTradeoffs.append(card);
+    });
+
+    analysis.implementation_steps.forEach((step) => {
+        const item = document.createElement("li");
+        item.value = step.order;
+
+        const title = document.createElement("strong");
+        title.textContent = step.title;
+
+        const description = document.createElement("p");
+        description.textContent = step.description;
+
+        item.append(title, description);
+        implementationSteps.append(item);
+    });
+
+    renderAugmentationList(
+        analysis.assumptions,
+        augmentationAssumptions
+    );
+    renderAugmentationList(
+        analysis.refinement_questions,
+        refinementQuestions
+    );
+}
+
 function clearRecommendationContent() {
     architectureName.textContent = "";
     architectureSummary.textContent = "";
@@ -173,6 +285,7 @@ function clearRecommendationContent() {
     wellArchitectedAssessments.replaceChildren();
     tradeoffsList.replaceChildren();
     nextStepsList.replaceChildren();
+    clearAugmentationContent();
 }
 
 function resetRecommendation() {
@@ -259,6 +372,7 @@ form.addEventListener("submit", async (event) => {
         renderWellArchitectedAssessments(recommendation.well_architected);
         renderTradeoffs(recommendation.tradeoffs);
         renderNextSteps(recommendation.next_steps);
+        renderAugmentation(recommendation.augmentation);
 
         formMessage.textContent =
             "Architecture recommendation generated successfully.";

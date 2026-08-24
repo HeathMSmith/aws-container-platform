@@ -91,7 +91,19 @@ variable "info_image_tag" {
 variable "advisor_image_tag" {
   description = "Immutable ECR image tag deployed to the architecture advisor service."
   type        = string
-  default     = "v0.1.3-architecture-advisor"
+  default     = "v0.2.0-bedrock-architecture-advisor"
+}
+
+variable "advisor_bedrock_enabled" {
+  description = "Whether Amazon Bedrock augmentation is enabled for the Architecture Advisor."
+  type        = bool
+  default     = true
+}
+
+variable "advisor_bedrock_model_id" {
+  description = "Amazon Bedrock model ID used to augment Architecture Advisor recommendations."
+  type        = string
+  default     = "anthropic.claude-haiku-4-5-20251001-v1:0"
 }
 
 variable "vpc_cidr" {

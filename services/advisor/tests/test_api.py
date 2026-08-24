@@ -83,6 +83,17 @@ def test_web_application_returns_structured_architecture():
     assert body["next_steps"]
 
 
+def test_advisor_response_reports_disabled_augmentation_by_default():
+    response = client.post("/advise", json=build_request())
+
+    assert response.status_code == 200
+    assert response.json()["augmentation"] == {
+        "status": "disabled",
+        "model_id": None,
+        "analysis": None,
+    }
+
+
 def test_relational_data_recommends_aurora():
     response = client.post(
         "/advise",

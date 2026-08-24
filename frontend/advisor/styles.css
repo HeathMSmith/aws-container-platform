@@ -629,6 +629,183 @@ li + li {
   margin-top: 7px;
 }
 
+/* Bedrock augmentation */
+.augmentation-section {
+  position: relative;
+}
+
+#recommendation:not(.has-augmentation) > section:nth-last-child(2) {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.augmentation-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.augmentation-header .result-label {
+  margin: 0 0 5px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#recommendation > section .augmentation-header h3 {
+  margin: 0;
+}
+
+.augmentation-status {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid rgba(109, 53, 242, 0.18);
+  border-radius: 999px;
+  background: rgba(109, 53, 242, 0.08);
+  color: var(--violet);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.augmentation-fallback {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 138, 114, 0.32);
+  border-radius: var(--radius-small);
+  background: rgba(255, 138, 114, 0.08);
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+#augmentation-analysis {
+  margin-top: 18px;
+}
+
+.augmentation-narrative {
+  padding: 18px;
+  border: 1px solid rgba(109, 53, 242, 0.15);
+  border-radius: 13px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(109, 53, 242, 0.06),
+      rgba(255, 138, 114, 0.05)
+    );
+}
+
+.augmentation-narrative h4,
+.augmentation-block h4,
+.augmentation-grid h4 {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.augmentation-narrative p {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.augmentation-block {
+  margin-top: 22px;
+}
+
+.augmentation-tradeoff-grid {
+  display: grid;
+  gap: 11px;
+}
+
+.augmentation-tradeoff {
+  padding: 15px;
+  border: 1px solid rgba(109, 53, 242, 0.13);
+  border-radius: var(--radius-small);
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.augmentation-tradeoff h5 {
+  margin: 0 0 9px;
+  color: var(--navy);
+  font-size: 0.88rem;
+}
+
+.augmentation-tradeoff p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.augmentation-tradeoff p + p {
+  margin-top: 6px;
+}
+
+.augmentation-tradeoff strong {
+  color: var(--navy-soft);
+}
+
+.implementation-steps {
+  display: grid;
+  gap: 10px;
+  padding-left: 24px;
+}
+
+.implementation-steps li {
+  padding: 13px 15px;
+  border: 1px solid rgba(109, 53, 242, 0.12);
+  border-radius: var(--radius-small);
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.implementation-steps li::marker {
+  color: var(--violet);
+  font-weight: 800;
+}
+
+.implementation-steps strong {
+  color: var(--navy);
+  font-size: 0.86rem;
+}
+
+.implementation-steps p {
+  margin: 5px 0 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.augmentation-grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.augmentation-grid article {
+  padding: 16px;
+  border: 1px solid rgba(109, 53, 242, 0.12);
+  border-radius: var(--radius-small);
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.augmentation-grid ul {
+  margin-top: 0;
+  padding-left: 18px;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 760px) {
+  .augmentation-header {
+    flex-direction: column;
+  }
+
+  .augmentation-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* How it works */
 
 .how-it-works {

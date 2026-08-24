@@ -13,13 +13,20 @@ module "network" {
 module "vpc_endpoints" {
   source = "../vpc-endpoints"
 
-  project_name                   = var.project_name
-  environment                    = var.environment
-  aws_region                     = var.aws_region
-  vpc_id                         = module.network.vpc_id
-  private_subnet_ids             = module.network.private_subnet_ids
-  private_route_table_id         = module.network.private_route_table_id
-  vpc_endpoint_security_group_id = module.network.vpc_endpoint_security_group_id
+  project_name                     = var.project_name
+  environment                      = var.environment
+  aws_region                       = var.aws_region
+  vpc_id                           = module.network.vpc_id
+  private_subnet_ids               = module.network.private_subnet_ids
+  private_route_table_id           = module.network.private_route_table_id
+  vpc_endpoint_security_group_id   = module.network.vpc_endpoint_security_group_id
+  bedrock_runtime_endpoint_enabled = var.bedrock_runtime_endpoint_enabled
+  bedrock_runtime_principal_arn = (
+    var.bedrock_runtime_endpoint_enabled
+    ? module.ecs_task_role["advisor"].role_arn
+    : null
+  )
+  bedrock_runtime_model_arn = var.bedrock_runtime_model_arn
 }
 
 module "alb" {

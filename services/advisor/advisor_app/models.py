@@ -104,6 +104,72 @@ class WellArchitectedAssessment(BaseModel):
     considerations: list[str]
 
 
+class AugmentationStatus(StrEnum):
+    GENERATED = "generated"
+    FALLBACK = "fallback"
+    DISABLED = "disabled"
+
+
+class TradeoffAnalysis(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    decision: str = Field(
+        description="Deterministic architecture decision being analyzed."
+    )
+    benefit: str = Field(
+        description="Workload-specific benefit of the architecture decision."
+    )
+    tradeoff: str = Field(
+        description="Cost, limitation, or operational consequence of the decision."
+    )
+
+
+class ImplementationStep(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    order: int = Field(
+        description="Recommended sequence number for the implementation step."
+    )
+    title: str = Field(description="Short title describing the implementation step.")
+    description: str = Field(
+        description="Workload-specific guidance for completing the step."
+    )
+
+
+class BedrockAnalysis(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    architecture_narrative: str = Field(
+        description="Explanation of how the selected AWS components work together."
+    )
+    tradeoff_analysis: list[TradeoffAnalysis] = Field(
+        description="Detailed analysis of deterministic architecture tradeoffs."
+    )
+    implementation_steps: list[ImplementationStep] = Field(
+        description="Ordered guidance for implementing the proposed architecture."
+    )
+    assumptions: list[str] = Field(
+        description="Assumptions inferred from incomplete workload information."
+    )
+    refinement_questions: list[str] = Field(
+        description="Questions that could improve a future recommendation."
+    )
+
+
+class AdvisorAugmentation(BaseModel):
+    status: AugmentationStatus = Field(
+        description="Outcome of the optional Bedrock augmentation attempt."
+    )
+    model_id: str | None = Field(
+        default=None,
+        description="Bedrock model used for the augmentation attempt.",
+    )
+    analysis: BedrockAnalysis | None = Field(
+        default=None,
+        description="Generated analysis when Bedrock augmentation succeeds.",
+    )
+
+
 class AdvisorResponse(BaseModel):
     architecture_name: str
     summary: str
@@ -112,3 +178,7 @@ class AdvisorResponse(BaseModel):
     well_architected: dict[ArchitecturePriority, WellArchitectedAssessment]
     tradeoffs: list[str]
     next_steps: list[str]
+    augmentation: AdvisorAugmentation | None = Field(
+        default=None,
+        description="Optional Bedrock-generated analysis of the recommendation.",
+    )
