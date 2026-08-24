@@ -4,14 +4,24 @@ data "aws_ecr_repository" "app" {
   name = each.value
 }
 
+data "aws_caller_identity" "current" {}
+
 data "aws_route53_zone" "site" {
   name         = var.hosted_zone_name
   private_zone = false
 }
 
+locals {
+  advisor_bedrock_inference_profile_arn = "arn:aws:bedrock:${var.aws_region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.advisor_bedrock_inference_profile_id}"
+  advisor_bedrock_foundation_model_arns = [
+    for destination_region in var.advisor_bedrock_destination_regions :
+    "arn:aws:bedrock:${destination_region}::foundation-model/${var.advisor_bedrock_foundation_model_id}"
+  ]
+}
+
 data "aws_iam_policy_document" "advisor_bedrock" {
   statement {
-    sid    = "InvokeAdvisorBedrockModel"
+    sid    = "InvokeAdvisorBedrockInferenceProfile"
     effect = "Allow"
 
     actions = [
@@ -19,8 +29,25 @@ data "aws_iam_policy_document" "advisor_bedrock" {
     ]
 
     resources = [
-      "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.advisor_bedrock_model_id}",
+      local.advisor_bedrock_inference_profile_arn,
     ]
+  }
+
+  statement {
+    sid    = "InvokeAdvisorBedrockDestinationModels"
+    effect = "Allow"
+
+    actions = [
+      "bedrock:InvokeModel",
+    ]
+
+    resources = local.advisor_bedrock_foundation_model_arns
+
+    condition {
+      test     = "StringEquals"
+      variable = "bedrock:InferenceProfileArn"
+      values   = [local.advisor_bedrock_inference_profile_arn]
+    }
   }
 }
 
@@ -95,7 +122,7 @@ locals {
       environment_variables = {
         ALLOWED_ORIGINS  = "https://${var.advisor_frontend_hostname}"
         BEDROCK_ENABLED  = tostring(var.advisor_bedrock_enabled)
-        BEDROCK_MODEL_ID = var.advisor_bedrock_model_id
+        BEDROCK_MODEL_ID = var.advisor_bedrock_inference_profile_id
       }
       container_port                    = var.container_port
       task_cpu                          = var.task_cpu
@@ -144,7 +171,8 @@ module "container_platform" {
     var.advisor_bedrock_enabled &&
     contains(keys(local.deployed_services), "advisor")
   )
-  bedrock_runtime_model_arn = "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.advisor_bedrock_model_id}"
+  bedrock_runtime_inference_profile_arn = local.advisor_bedrock_inference_profile_arn
+  bedrock_runtime_foundation_model_arns = local.advisor_bedrock_foundation_model_arns
 }
 
 resource "aws_sns_topic_subscription" "alarm_email" {

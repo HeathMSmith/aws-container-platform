@@ -91,7 +91,7 @@ variable "info_image_tag" {
 variable "advisor_image_tag" {
   description = "Immutable ECR image tag deployed to the architecture advisor service."
   type        = string
-  default     = "v0.2.0-bedrock-architecture-advisor"
+  default     = "v0.2.1-bedrock-architecture-advisor"
 }
 
 variable "advisor_bedrock_enabled" {
@@ -100,10 +100,26 @@ variable "advisor_bedrock_enabled" {
   default     = true
 }
 
-variable "advisor_bedrock_model_id" {
-  description = "Amazon Bedrock model ID used to augment Architecture Advisor recommendations."
+variable "advisor_bedrock_inference_profile_id" {
+  description = "Amazon Bedrock inference profile ID used to augment Architecture Advisor recommendations."
+  type        = string
+  default     = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+}
+
+variable "advisor_bedrock_foundation_model_id" {
+  description = "Foundation model ID used by the Advisor inference profile."
   type        = string
   default     = "anthropic.claude-haiku-4-5-20251001-v1:0"
+}
+
+variable "advisor_bedrock_destination_regions" {
+  description = "AWS Regions containing foundation models used by the Advisor inference profile."
+  type        = list(string)
+  default = [
+    "us-east-1",
+    "us-east-2",
+    "us-west-2",
+  ]
 }
 
 variable "vpc_cidr" {

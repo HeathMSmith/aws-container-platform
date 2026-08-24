@@ -54,8 +54,8 @@ variable "bedrock_runtime_principal_arn" {
   }
 }
 
-variable "bedrock_runtime_model_arn" {
-  description = "Foundation model ARN allowed through the Amazon Bedrock Runtime endpoint."
+variable "bedrock_runtime_inference_profile_arn" {
+  description = "Inference profile ARN allowed through the Amazon Bedrock Runtime endpoint."
   type        = string
   default     = null
   nullable    = true
@@ -63,8 +63,22 @@ variable "bedrock_runtime_model_arn" {
   validation {
     condition = (
       !var.bedrock_runtime_endpoint_enabled ||
-      var.bedrock_runtime_model_arn != null
+      var.bedrock_runtime_inference_profile_arn != null
     )
-    error_message = "bedrock_runtime_model_arn is required when the Bedrock Runtime endpoint is enabled."
+    error_message = "bedrock_runtime_inference_profile_arn is required when the Bedrock Runtime endpoint is enabled."
+  }
+}
+
+variable "bedrock_runtime_foundation_model_arns" {
+  description = "Foundation model ARNs used by the allowed Amazon Bedrock inference profile."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = (
+      !var.bedrock_runtime_endpoint_enabled ||
+      length(var.bedrock_runtime_foundation_model_arns) > 0
+    )
+    error_message = "bedrock_runtime_foundation_model_arns must not be empty when the Bedrock Runtime endpoint is enabled."
   }
 }

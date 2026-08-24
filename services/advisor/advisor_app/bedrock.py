@@ -18,7 +18,7 @@ from .models import (
     BedrockAnalysis,
 )
 
-DEFAULT_MODEL_ID = "anthropic.claude-haiku-4-5-20251001-v1:0"
+DEFAULT_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 DEFAULT_REGION = "us-east-1"
 MAX_OUTPUT_TOKENS = 1000
 
