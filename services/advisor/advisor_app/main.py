@@ -8,7 +8,7 @@ from .models import AdvisorRequest, AdvisorResponse
 
 app = FastAPI(
     title="AWS Architecture Advisor",
-    version="0.2.1",
+    version="0.2.2",
 )
 
 allowed_origins = [

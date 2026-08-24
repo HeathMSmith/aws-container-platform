@@ -1,6 +1,8 @@
 import json
 
 from botocore.exceptions import ClientError
+from botocore.session import Session
+from botocore.validate import validate_parameters
 
 from services.advisor.advisor_app.advisor import generate_recommendation
 from services.advisor.advisor_app.bedrock import (
@@ -10,6 +12,7 @@ from services.advisor.advisor_app.bedrock import (
 from services.advisor.advisor_app.models import (
     AdvisorRequest,
     AugmentationStatus,
+    BedrockAnalysis,
 )
 
 
@@ -131,6 +134,7 @@ def test_valid_bedrock_response_returns_generated_analysis():
                     ]
                 }
             },
+            "stopReason": "end_turn",
             "usage": {
                 "inputTokens": 900,
                 "outputTokens": 500,
@@ -152,9 +156,17 @@ def test_valid_bedrock_response_returns_generated_analysis():
     assert len(client.calls) == 1
 
     call = client.calls[0]
+    converse_shape = (
+        Session()
+        .get_service_model("bedrock-runtime")
+        .operation_model("Converse")
+        .input_shape
+    )
+    validate_parameters(call, converse_shape)
+
     assert call["modelId"] == MODEL_ID
     assert call["inferenceConfig"] == {
-        "maxTokens": 1000,
+        "maxTokens": 2000,
         "temperature": 0.2,
     }
 
@@ -164,7 +176,49 @@ def test_valid_bedrock_response_returns_generated_analysis():
         for service in prompt["deterministic_recommendation"]["services"]
     }
     assert "Amazon ECS on AWS Fargate" in service_names
-    assert "output_schema" in prompt
+    assert "output_schema" not in prompt
+
+    text_format = call["outputConfig"]["textFormat"]
+    assert text_format["type"] == "json_schema"
+
+    schema_config = text_format["structure"]["jsonSchema"]
+    assert schema_config["name"] == "advisor_analysis"
+    assert json.loads(schema_config["schema"]) == (
+        BedrockAnalysis.model_json_schema()
+    )
+
+
+def test_max_tokens_response_returns_fallback():
+    request = build_request()
+    recommendation = generate_recommendation(request)
+    client = FakeBedrockClient(
+        response={
+            "output": {
+                "message": {
+                    "content": [
+                        {
+                            "text": json.dumps(valid_analysis()),
+                        }
+                    ]
+                }
+            },
+            "stopReason": "max_tokens",
+            "usage": {
+                "outputTokens": 2000,
+            },
+        }
+    )
+
+    result = augment_recommendation(
+        request,
+        recommendation,
+        settings=enabled_settings(),
+        client=client,
+    )
+
+    assert result.status == AugmentationStatus.FALLBACK
+    assert result.model_id == MODEL_ID
+    assert result.analysis is None
 
 
 def test_malformed_bedrock_json_returns_fallback():
@@ -180,7 +234,8 @@ def test_malformed_bedrock_json_returns_fallback():
                         }
                     ]
                 }
-            }
+            },
+            "stopReason": "end_turn",
         }
     )
 
@@ -215,7 +270,8 @@ def test_invalid_bedrock_schema_returns_fallback():
                         }
                     ]
                 }
-            }
+            },
+            "stopReason": "end_turn",
         }
     )
 

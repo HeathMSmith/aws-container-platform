@@ -20,7 +20,7 @@ from .models import (
 
 DEFAULT_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 DEFAULT_REGION = "us-east-1"
-MAX_OUTPUT_TOKENS = 1000
+MAX_OUTPUT_TOKENS = 2000
 
 logger = logging.getLogger(__name__)
 _clients: dict[str, Any] = {}
@@ -60,7 +60,7 @@ def _get_client(region: str) -> Any:
             region_name=region,
             config=Config(
                 connect_timeout=2,
-                read_timeout=12,
+                read_timeout=30,
                 tcp_keepalive=True,
                 retries={
                     "mode": "standard",
@@ -71,18 +71,39 @@ def _get_client(region: str) -> Any:
     return _clients[region]
 
 
+def _build_output_config() -> dict[str, Any]:
+    schema = json.dumps(
+        BedrockAnalysis.model_json_schema(),
+        separators=(",", ":"),
+    )
+
+    return {
+        "textFormat": {
+            "type": "json_schema",
+            "structure": {
+                "jsonSchema": {
+                    "schema": schema,
+                    "name": "advisor_analysis",
+                    "description": (
+                        "Workload-specific analysis of the deterministic "
+                        "AWS architecture recommendation."
+                    ),
+                }
+            },
+        }
+    }
+
+
 def _build_prompt(
     request: AdvisorRequest,
     recommendation: AdvisorResponse,
 ) -> str:
-    output_schema = BedrockAnalysis.model_json_schema()
-
     return json.dumps(
         {
             "instructions": [
                 (
-                    "Return only valid JSON matching output_schema. "
-                    "Do not wrap the response in Markdown or code fences."
+                    "Populate every field in the configured output schema. "
+                    "Keep each section concise and workload-specific."
                 ),
                 (
                     "The deterministic recommendation is authoritative. "
@@ -100,13 +121,19 @@ def _build_prompt(
                 mode="json",
                 exclude={"augmentation"},
             ),
-            "output_schema": output_schema,
         },
         separators=(",", ":"),
     )
 
 
 def _extract_analysis(response: dict[str, Any]) -> BedrockAnalysis:
+    stop_reason = response.get("stopReason")
+
+    if stop_reason != "end_turn":
+        raise ValueError(
+            f"Bedrock stopped generation with reason {stop_reason!r}."
+        )
+
     content = response["output"]["message"]["content"]
     generated_text = "".join(
         block["text"]
@@ -145,6 +172,7 @@ def augment_recommendation(
         )
 
     started_at = time.monotonic()
+    response: dict[str, Any] | None = None
 
     try:
         runtime_client = client or _get_client(resolved_settings.region)
@@ -176,6 +204,7 @@ def augment_recommendation(
                 "maxTokens": MAX_OUTPUT_TOKENS,
                 "temperature": 0.2,
             },
+            outputConfig=_build_output_config(),
         )
         analysis = _extract_analysis(response)
         elapsed_ms = round((time.monotonic() - started_at) * 1000)
@@ -221,15 +250,47 @@ def augment_recommendation(
             type(error).__name__,
             elapsed_ms,
         )
-    except (KeyError, TypeError, ValueError, ValidationError) as error:
+    except ValidationError as error:
         elapsed_ms = round((time.monotonic() - started_at) * 1000)
+        response_data = response if isinstance(response, dict) else {}
+        usage = response_data.get("usage", {})
+        validation_errors = [
+            {
+                "type": item["type"],
+                "location": list(item["loc"]),
+            }
+            for item in error.errors(
+                include_input=False,
+                include_url=False,
+            )
+        ]
         logger.warning(
             (
                 "Bedrock response rejected: model_id=%s "
-                "error_type=%s elapsed_ms=%s"
+                "error_type=%s stop_reason=%s output_tokens=%s "
+                "validation_errors=%s elapsed_ms=%s"
             ),
             resolved_settings.model_id,
             type(error).__name__,
+            response_data.get("stopReason"),
+            usage.get("outputTokens"),
+            validation_errors,
+            elapsed_ms,
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        elapsed_ms = round((time.monotonic() - started_at) * 1000)
+        response_data = response if isinstance(response, dict) else {}
+        usage = response_data.get("usage", {})
+        logger.warning(
+            (
+                "Bedrock response rejected: model_id=%s "
+                "error_type=%s stop_reason=%s output_tokens=%s "
+                "elapsed_ms=%s"
+            ),
+            resolved_settings.model_id,
+            type(error).__name__,
+            response_data.get("stopReason"),
+            usage.get("outputTokens"),
             elapsed_ms,
         )
     except Exception as error:
