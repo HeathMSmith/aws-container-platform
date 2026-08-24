@@ -91,7 +91,7 @@ variable "info_image_tag" {
 variable "advisor_image_tag" {
   description = "Immutable ECR image tag deployed to the architecture advisor service."
   type        = string
-  default     = "v0.1.3-architecture-advisor"
+  default     = "v0.2.0-bedrock-architecture-advisor"
 }
 
 variable "advisor_bedrock_enabled" {
