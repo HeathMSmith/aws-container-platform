@@ -26,7 +26,8 @@ module "vpc_endpoints" {
     ? module.ecs_task_role["advisor"].role_arn
     : null
   )
-  bedrock_runtime_model_arn = var.bedrock_runtime_model_arn
+  bedrock_runtime_inference_profile_arn = var.bedrock_runtime_inference_profile_arn
+  bedrock_runtime_foundation_model_arns = var.bedrock_runtime_foundation_model_arns
 }
 
 module "alb" {

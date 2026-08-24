@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "bedrock_runtime_endpoint" {
   count = var.bedrock_runtime_endpoint_enabled ? 1 : 0
 
   statement {
-    sid    = "AllowAdvisorModelInvocation"
+    sid    = "AllowAdvisorInferenceProfileInvocation"
     effect = "Allow"
 
     principals {
@@ -68,8 +68,32 @@ data "aws_iam_policy_document" "bedrock_runtime_endpoint" {
     ]
 
     resources = [
-      var.bedrock_runtime_model_arn,
+      var.bedrock_runtime_inference_profile_arn,
     ]
+  }
+
+  statement {
+    sid    = "AllowAdvisorDestinationModelInvocation"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        var.bedrock_runtime_principal_arn,
+      ]
+    }
+
+    actions = [
+      "bedrock:InvokeModel",
+    ]
+
+    resources = var.bedrock_runtime_foundation_model_arns
+
+    condition {
+      test     = "StringEquals"
+      variable = "bedrock:InferenceProfileArn"
+      values   = [var.bedrock_runtime_inference_profile_arn]
+    }
   }
 }
 
