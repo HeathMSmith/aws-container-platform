@@ -114,13 +114,18 @@ class TradeoffAnalysis(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     decision: str = Field(
-        description="Deterministic architecture decision being analyzed."
+        description=(
+            "Deterministic architecture decision expressed in no more than " "12 words."
+        )
     )
     benefit: str = Field(
-        description="Workload-specific benefit of the architecture decision."
+        description=("One workload-specific benefit sentence of no more than 30 words.")
     )
     tradeoff: str = Field(
-        description="Cost, limitation, or operational consequence of the decision."
+        description=(
+            "One cost, limitation, or operational-consequence sentence of no "
+            "more than 30 words."
+        )
     )
 
 
@@ -154,6 +159,79 @@ class BedrockAnalysis(BaseModel):
     refinement_questions: list[str] = Field(
         description="Questions that could improve a future recommendation."
     )
+
+
+class BedrockOutputImplementationStep(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(description="Imperative step title of no more than 10 words.")
+    description: str = Field(
+        description=(
+            "One or two workload-specific implementation sentences totaling "
+            "no more than 40 words."
+        )
+    )
+
+
+class BedrockOutputTradeoffs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    tradeoff_1: TradeoffAnalysis
+    tradeoff_2: TradeoffAnalysis
+    tradeoff_3: TradeoffAnalysis
+
+
+class BedrockOutputImplementationSteps(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    step_1: BedrockOutputImplementationStep
+    step_2: BedrockOutputImplementationStep
+    step_3: BedrockOutputImplementationStep
+    step_4: BedrockOutputImplementationStep
+    step_5: BedrockOutputImplementationStep
+
+
+class BedrockOutputAssumptions(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    assumption_1: str = Field(
+        description="One workload assumption of no more than 25 words."
+    )
+    assumption_2: str = Field(
+        description="One workload assumption of no more than 25 words."
+    )
+    assumption_3: str = Field(
+        description="One workload assumption of no more than 25 words."
+    )
+
+
+class BedrockOutputQuestions(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question_1: str = Field(
+        description="One refinement question of no more than 25 words."
+    )
+    question_2: str = Field(
+        description="One refinement question of no more than 25 words."
+    )
+    question_3: str = Field(
+        description="One refinement question of no more than 25 words."
+    )
+
+
+class BedrockOutputAnalysis(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    architecture_narrative: str = Field(
+        description=(
+            "One workload-specific architecture paragraph of no more than "
+            "100 words."
+        )
+    )
+    tradeoff_analysis: BedrockOutputTradeoffs
+    implementation_steps: BedrockOutputImplementationSteps
+    assumptions: BedrockOutputAssumptions
+    refinement_questions: BedrockOutputQuestions
 
 
 class AdvisorAugmentation(BaseModel):
