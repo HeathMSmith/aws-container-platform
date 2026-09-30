@@ -6,6 +6,8 @@ The project started with a single FastAPI container and evolved into a shared pl
 
 ## Summary
 
+**Operations:** See the [operational runbook](docs/operational-runbook.md) for DEV and PROD deployment, verification, troubleshooting, rollback, and teardown guidance.
+
 This project started as a way to get hands-on with Docker, Amazon ECR, and Amazon ECS on AWS Fargate. Rather than designing a generalized platform up front, I built a working service first and introduced abstractions when additional workloads exposed a reason for them.
 
 The platform currently runs three services:
