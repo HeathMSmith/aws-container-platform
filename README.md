@@ -411,7 +411,7 @@ The plan workflow provides an environment-specific Terraform plan for review. Wh
 
 A successful Terraform apply isn't treated as proof that the application is healthy.
 
-Post-deployment verification checks the runtime state, including ECS service stabilization, running tasks, the image deployed to ECS, target health, DNS, and application endpoints.
+Post-deployment verification waits for ECS services to stabilize, compares the expected container image URI with the image URI reported by one running task per service and each service's task definition, and requests `/health` over HTTPS for each service. The HTTPS checks exercise DNS resolution and ALB routing, but the workflow does not independently verify Route 53 records, ALB target-health status, image digests, or `/ready` endpoints.
 
 A controlled destroy workflow is also available so environments that aren't needed continuously can be removed without deleting the shared ECR foundation.
 
