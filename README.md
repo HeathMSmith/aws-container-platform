@@ -417,6 +417,21 @@ A controlled destroy workflow is also available so environments that aren't need
 
 ---
 
+## Production Readiness and Validation
+
+The platform includes automated validation, deployment safeguards, monitoring, and security controls designed for production-style operation. The checks and limitations below distinguish what's implemented from what has been operationally verified.
+
+- **Application tests:** pytest covers API status, health, and readiness responses; Advisor tests cover recommendation rules, request validation, and CORS. Bedrock tests use fake clients to exercise successful augmentation and fallback paths, not live Bedrock integration.
+- **CI and infrastructure checks:** GitHub Actions configures application tests, builds all three containers, and runs Terraform formatting checks and backend-disabled initialization/validation for the ECR foundation, DEV, and PROD.
+- **Authentication and images:** AWS workflows configure OIDC role assumption; role trust policies and GitHub environment protections are external prerequisites. ECR repositories configure immutable tags and scan-on-push. Release promotion reuses an existing manifest and verifies matching image digests; scan results do not gate deployment.
+- **Deployment and routing:** ECS/Fargate services enable deployment circuit-breaker rollback. The ALB redirects HTTP to HTTPS and routes by hostname. Container and target-group checks use `/health`; every service also exposes `/ready`. Both endpoints return static responses without downstream dependency checks. The Apply workflow configures stability waits, image URI comparisons for one running task per service and configured task definitions, and HTTPS `/health` requests.
+- **Operations and scaling:** ECS task definitions send container logs to CloudWatch Logs. Terraform configures CPU, memory, unhealthy-target, and HTTP 5xx alarms, with SNS notification actions. Email subscriptions are conditional; notification delivery is unverified. CPU target tracking configures per-service scaling, but scaling under load has not been validated.
+- **Security boundaries:** Tasks use private subnets without public IPs, separate execution and workload IAM roles, restricted security-group rules, and VPC endpoints. Containers run as non-root with read-only root filesystems and all Linux capabilities dropped. The conditional Bedrock Runtime endpoint occupies one subnet.
+
+The [operational runbook](docs/operational-runbook.md) covers troubleshooting, rollback, teardown, and unresolved operating decisions. Manual rollback is not verified end to end. The repository documents no sustained load testing, formal SLOs, or production incident history; it does not establish production customer usage or sustained production traffic.
+
+---
+
 ## Repository Structure
 
 ```text
